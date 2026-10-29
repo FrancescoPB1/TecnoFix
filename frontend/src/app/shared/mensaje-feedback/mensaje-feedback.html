@@ -1,0 +1,6 @@
+@if (texto) {
+  <div [class]="'alert d-flex justify-content-between align-items-start alert-' + tipo" role="alert">
+    <span>{{ texto }}</span>
+    <button type="button" class="btn-close" aria-label="Cerrar mensaje" (click)="cerrar.emit()"></button>
+  </div>
+}

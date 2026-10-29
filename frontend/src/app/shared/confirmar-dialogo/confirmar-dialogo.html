@@ -1,0 +1,16 @@
+<div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-dialogo" style="background: rgba(0, 0, 0, 0.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="titulo-dialogo">{{ titulo }}</h5>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">{{ mensaje }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="cancelado.emit()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="confirmado.emit()">{{ textoConfirmar }}</button>
+      </div>
+    </div>
+  </div>
+</div>
