@@ -1,0 +1,177 @@
+<h1 class="h4 mb-3">Recepción de equipo</h1>
+
+@if (codigoCreado()) {
+  <div class="alert alert-success">
+    <p class="mb-2">Orden <strong>{{ codigoCreado() }}</strong> registrada correctamente. Quedó pendiente de asignación a un técnico.</p>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-success btn-sm" (click)="irAlPanel()">Ir al panel de órdenes</button>
+      <button type="button" class="btn btn-outline-success btn-sm" (click)="nuevaRecepcion()">Registrar otra recepción</button>
+    </div>
+  </div>
+} @else {
+  <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
+  <form #f="ngForm" (ngSubmit)="guardar(f)" novalidate>
+    <div class="card mb-3">
+      <div class="card-header">1. Cliente</div>
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-12 col-md-4">
+            <label for="dni" class="form-label">DNI del cliente</label>
+            <input
+              id="dni"
+              name="dni"
+              class="form-control"
+              [class.is-invalid]="d.invalid && (d.touched || f.submitted)"
+              [(ngModel)]="dni"
+              (ngModelChange)="alCambiarDni()"
+              #d="ngModel"
+              required
+              pattern="[0-9]{8}"
+              inputmode="numeric"
+              maxlength="8"
+            />
+            <div class="invalid-feedback">El DNI debe tener 8 dígitos.</div>
+          </div>
+          <div class="col-12 col-md-3">
+            <button type="button" class="btn btn-outline-primary" [disabled]="d.invalid" (click)="buscarCliente()">
+              Buscar cliente
+            </button>
+          </div>
+        </div>
+
+        @if (busquedaHecha() && clienteEncontrado(); as cliente) {
+          <div class="alert alert-info mt-3 mb-0">
+            Cliente registrado: <strong>{{ cliente.nombres }}</strong> · {{ cliente.telefono }}
+          </div>
+        } @else if (busquedaHecha()) {
+          <p class="text-muted mt-3 mb-2">El DNI no está registrado. Complete los datos para crear al cliente.</p>
+          <div class="row g-3">
+            <div class="col-12 col-md-5">
+              <label for="nombres" class="form-label">Nombres y apellidos</label>
+              <input
+                id="nombres"
+                name="nombres"
+                class="form-control"
+                [class.is-invalid]="n.invalid && (n.touched || f.submitted)"
+                [(ngModel)]="nuevoCliente.nombres"
+                #n="ngModel"
+                required
+              />
+              <div class="invalid-feedback">Ingrese los nombres del cliente.</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <label for="correo" class="form-label">Correo</label>
+              <input
+                id="correo"
+                name="correo"
+                type="email"
+                class="form-control"
+                [class.is-invalid]="c.invalid && (c.touched || f.submitted)"
+                [(ngModel)]="nuevoCliente.correo"
+                #c="ngModel"
+                required
+                email
+              />
+              <div class="invalid-feedback">Ingrese un correo válido.</div>
+            </div>
+            <div class="col-12 col-md-3">
+              <label for="telefono" class="form-label">Teléfono</label>
+              <input
+                id="telefono"
+                name="telefono"
+                class="form-control"
+                [class.is-invalid]="t.invalid && (t.touched || f.submitted)"
+                [(ngModel)]="nuevoCliente.telefono"
+                #t="ngModel"
+                required
+                pattern="[0-9]{9}"
+                inputmode="numeric"
+                maxlength="9"
+              />
+              <div class="invalid-feedback">El teléfono debe tener 9 dígitos.</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">2. Equipo y falla reportada</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-3">
+            <label for="tipo" class="form-label">Tipo</label>
+            <select id="tipo" name="tipo" class="form-select" [(ngModel)]="equipo.tipo" required>
+              @for (t of tipos; track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <label for="marca" class="form-label">Marca</label>
+            <input
+              id="marca"
+              name="marca"
+              class="form-control"
+              [class.is-invalid]="ma.invalid && (ma.touched || f.submitted)"
+              [(ngModel)]="equipo.marca"
+              #ma="ngModel"
+              required
+            />
+            <div class="invalid-feedback">Ingrese la marca.</div>
+          </div>
+          <div class="col-12 col-md-3">
+            <label for="modelo" class="form-label">Modelo</label>
+            <input
+              id="modelo"
+              name="modelo"
+              class="form-control"
+              [class.is-invalid]="mo.invalid && (mo.touched || f.submitted)"
+              [(ngModel)]="equipo.modelo"
+              #mo="ngModel"
+              required
+            />
+            <div class="invalid-feedback">Ingrese el modelo.</div>
+          </div>
+          <div class="col-12 col-md-3">
+            <label for="serie" class="form-label">Serie (opcional)</label>
+            <input id="serie" name="serie" class="form-control" [(ngModel)]="equipo.serie" />
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label for="falla" class="form-label">Falla reportada</label>
+            <textarea
+              id="falla"
+              name="falla"
+              rows="3"
+              class="form-control"
+              [class.is-invalid]="fa.invalid && (fa.touched || f.submitted)"
+              [(ngModel)]="falla"
+              #fa="ngModel"
+              required
+              minlength="10"
+            ></textarea>
+            <div class="invalid-feedback">Describa la falla (mínimo 10 caracteres).</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label for="accesorios" class="form-label">Accesorios recibidos</label>
+            <textarea
+              id="accesorios"
+              name="accesorios"
+              rows="3"
+              class="form-control"
+              placeholder="Ej.: cargador, mochila, cable USB"
+              [(ngModel)]="accesorios"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">Guardar recepción</button>
+      <a class="btn btn-outline-secondary" routerLink="/admin">Cancelar</a>
+    </div>
+  </form>
+}
