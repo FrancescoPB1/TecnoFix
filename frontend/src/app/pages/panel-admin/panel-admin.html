@@ -1,0 +1,100 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h4 mb-0">Panel de órdenes</h1>
+  <a class="btn btn-primary" routerLink="/admin/recepcion">Nueva orden</a>
+</div>
+
+<div class="row g-3 mb-4">
+  @for (r of resumen(); track r.estado) {
+    <div class="col-6 col-lg-3">
+      <a
+        class="card text-decoration-none h-100"
+        [class.border-primary]="estadoFiltro() === r.estado"
+        routerLink="/admin"
+        [queryParams]="{ estado: r.estado }"
+      >
+        <div class="card-body">
+          <div class="text-muted small">{{ r.titulo }}</div>
+          <div class="display-6">{{ r.cantidad }}</div>
+        </div>
+      </a>
+    </div>
+  }
+</div>
+
+<app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
+
+<div class="card">
+  <div class="card-body">
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-6">
+        <label for="buscar" class="form-label small mb-1">Buscar orden o cliente</label>
+        <input id="buscar" class="form-control" placeholder="Código, cliente o equipo" [(ngModel)]="texto" />
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="filtro" class="form-label small mb-1">Estado</label>
+        <select
+          id="filtro"
+          class="form-select"
+          [ngModel]="estadoFiltro()"
+          (ngModelChange)="cambiarFiltro($event)"
+        >
+          <option value="">Todos</option>
+          @for (e of estados; track e[0]) {
+            <option [value]="e[0]">{{ e[1] }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover tabla-ordenes mb-0">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Cliente</th>
+            <th>Equipo</th>
+            <th>Estado</th>
+            <th>Técnico</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of ordenesFiltradas(); track o.id) {
+            <tr>
+              <td class="fw-semibold">{{ o.codigo }}</td>
+              <td>{{ datos.cliente(o.clienteId)?.nombres }}</td>
+              <td>{{ datos.descripcionEquipo(o.equipoId) }}</td>
+              <td><app-estado-badge [estado]="o.estado" /></td>
+              <td>{{ datos.nombreTecnico(o.tecnicoId) }}</td>
+              <td>
+                @if (o.estado === 'RECIBIDO') {
+                  <div class="input-group input-group-sm">
+                    <select
+                      class="form-select"
+                      [attr.aria-label]="'Técnico para ' + o.codigo"
+                      (change)="elegirTecnico(o.id, $any($event.target).value)"
+                    >
+                      <option value="">Técnico...</option>
+                      @for (t of datos.tecnicos(); track t.id) {
+                        <option [value]="t.id">{{ t.nombre }}</option>
+                      }
+                    </select>
+                    <button type="button" class="btn btn-outline-primary" (click)="asignar(o)">Asignar</button>
+                  </div>
+                } @else if (puedeEntregarse(o)) {
+                  <a class="btn btn-sm btn-success" [routerLink]="['/admin/entrega', o.id]">Registrar entrega</a>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">No hay órdenes que coincidan con la búsqueda.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

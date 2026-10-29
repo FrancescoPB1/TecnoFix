@@ -1,0 +1,75 @@
+<h1 class="h4 mb-3">Entrega y cierre</h1>
+
+@if (!orden()) {
+  <div class="alert alert-warning">No se encontró la orden solicitada.</div>
+  <a routerLink="/admin" class="btn btn-outline-secondary">Volver al panel</a>
+} @else if (entregado()) {
+  <div class="alert alert-success">
+    La orden <strong>{{ orden()!.codigo }}</strong> quedó registrada como entregada a {{ orden()!.receptor }}.
+  </div>
+  <a routerLink="/admin" class="btn btn-primary">Volver al panel</a>
+} @else if (!puedeEntregarse()) {
+  <div class="alert alert-info">La orden {{ orden()!.codigo }} todavía no está lista para entrega.</div>
+  <a routerLink="/admin" class="btn btn-outline-secondary">Volver al panel</a>
+} @else {
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0">Orden {{ orden()!.codigo }}</h2>
+        <app-estado-badge [estado]="orden()!.estado" />
+      </div>
+      <p class="mb-1"><strong>Cliente:</strong> {{ datos.cliente(orden()!.clienteId)?.nombres }}</p>
+      <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}</p>
+      <p class="mb-1"><strong>Falla reportada:</strong> {{ orden()!.falla }}</p>
+      @if (orden()!.actividad) {
+        <p class="mb-1"><strong>Intervención:</strong> {{ orden()!.actividad }}</p>
+        <p class="mb-0"><strong>Pruebas:</strong> {{ orden()!.pruebas }}</p>
+      } @else {
+        <p class="mb-0 text-muted">El cliente rechazó el presupuesto; el equipo se devuelve sin reparar.</p>
+      }
+    </div>
+  </div>
+
+  <form #f="ngForm" (ngSubmit)="pedirConfirmacion(f)" novalidate>
+    <div class="card mb-3">
+      <div class="card-body row g-3">
+        <div class="col-12 col-md-6">
+          <label for="receptor" class="form-label">Receptor (quien recoge el equipo)</label>
+          <input
+            id="receptor"
+            name="receptor"
+            class="form-control"
+            [class.is-invalid]="r.invalid && (r.touched || f.submitted)"
+            [(ngModel)]="receptor"
+            #r="ngModel"
+            required
+          />
+          <div class="invalid-feedback">Ingrese el nombre de quien recibe el equipo.</div>
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="devueltos" class="form-label">Accesorios devueltos</label>
+          <input id="devueltos" name="devueltos" class="form-control" [(ngModel)]="accesoriosDevueltos" />
+        </div>
+        <div class="col-12">
+          <label for="obs" class="form-label">Observaciones</label>
+          <textarea id="obs" name="obs" rows="2" class="form-control" [(ngModel)]="observaciones"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-success">Confirmar entrega</button>
+      <a routerLink="/admin" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+  </form>
+
+  @if (confirmando()) {
+    <app-confirmar-dialogo
+      titulo="Confirmar entrega"
+      [mensaje]="'Se registrará la entrega de la orden ' + orden()!.codigo + ' a ' + receptor + '. Esta acción no se puede deshacer.'"
+      textoConfirmar="Confirmar entrega"
+      (confirmado)="confirmar()"
+      (cancelado)="confirmando.set(false)"
+    />
+  }
+}
