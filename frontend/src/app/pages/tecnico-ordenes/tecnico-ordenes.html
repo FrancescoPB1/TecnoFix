@@ -1,0 +1,42 @@
+<h1 class="h4 mb-3">Órdenes asignadas</h1>
+
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover tabla-ordenes mb-0">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Equipo</th>
+            <th>Falla reportada</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of ordenes(); track o.id) {
+            <tr>
+              <td class="fw-semibold">{{ o.codigo }}</td>
+              <td>{{ datos.descripcionEquipo(o.equipoId) }}</td>
+              <td>{{ o.falla }}</td>
+              <td><app-estado-badge [estado]="o.estado" /></td>
+              <td>
+                @if (o.estado === 'EN_DIAGNOSTICO') {
+                  <a class="btn btn-sm btn-primary" [routerLink]="['/tecnico/diagnostico', o.id]">Diagnosticar</a>
+                } @else if (o.estado === 'EN_REPARACION') {
+                  <a class="btn btn-sm btn-primary" [routerLink]="['/tecnico/reparacion', o.id]">Registrar reparación</a>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">No tiene órdenes asignadas por ahora.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

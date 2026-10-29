@@ -1,0 +1,69 @@
+<h1 class="h4 mb-3">Registro de reparación</h1>
+
+@if (terminado()) {
+  <div class="alert alert-success">
+    La orden <strong>{{ orden()!.codigo }}</strong> quedó lista para entrega. Recepción fue notificada en el panel.
+  </div>
+  <a routerLink="/tecnico" class="btn btn-primary">Volver a mis órdenes</a>
+} @else if (!permitido()) {
+  <div class="alert alert-warning">Esta orden no está disponible para registrar reparación con su usuario.</div>
+  <a routerLink="/tecnico" class="btn btn-outline-secondary">Volver a mis órdenes</a>
+} @else {
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0">Orden {{ orden()!.codigo }}</h2>
+        <app-estado-badge [estado]="orden()!.estado" />
+      </div>
+      <p class="mb-1"><strong>Técnico responsable:</strong> {{ datos.nombreTecnico(orden()!.tecnicoId) }}</p>
+      <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}</p>
+      <p class="mb-0"><strong>Presupuesto aprobado:</strong> S/ {{ orden()!.montoPresupuesto?.toFixed(2) }}</p>
+    </div>
+  </div>
+
+  <app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
+
+  <form #f="ngForm" (ngSubmit)="marcarListo(f)" novalidate>
+    <div class="card mb-3">
+      <div class="card-body row g-3">
+        <div class="col-12">
+          <label for="actividad" class="form-label">Actividad realizada</label>
+          <textarea
+            id="actividad"
+            name="actividad"
+            rows="3"
+            class="form-control"
+            [class.is-invalid]="a.invalid && (a.touched || f.submitted)"
+            [(ngModel)]="actividad"
+            #a="ngModel"
+            required
+          ></textarea>
+          <div class="invalid-feedback">Describa la actividad realizada.</div>
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="repuestos" class="form-label">Repuestos utilizados</label>
+          <input id="repuestos" name="repuestos" class="form-control" placeholder="Detalle y costo" [(ngModel)]="repuestos" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="pruebas" class="form-label">Pruebas y resultado</label>
+          <input
+            id="pruebas"
+            name="pruebas"
+            class="form-control"
+            [class.is-invalid]="p.invalid && (p.touched || f.submitted)"
+            [(ngModel)]="pruebas"
+            #p="ngModel"
+            required
+          />
+          <div class="invalid-feedback">Registre las pruebas de funcionamiento.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-outline-primary" (click)="guardar()">Guardar avance</button>
+      <button type="submit" class="btn btn-success">Listo para entrega</button>
+      <a routerLink="/tecnico" class="btn btn-outline-secondary">Volver</a>
+    </div>
+  </form>
+}
