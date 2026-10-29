@@ -1,0 +1,69 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-7 col-lg-5">
+      <div class="text-center mb-4">
+        <h1 class="h3 mb-1">TecnoFix</h1>
+        <p class="text-muted mb-0">Gestión de órdenes de servicio técnico</p>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <h2 class="h5 mb-3">Iniciar sesión</h2>
+
+          <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
+          <form #f="ngForm" (ngSubmit)="ingresar(f)" novalidate>
+            <div class="mb-3">
+              <label for="usuario" class="form-label">Usuario</label>
+              <input
+                id="usuario"
+                name="usuario"
+                class="form-control"
+                [class.is-invalid]="u.invalid && (u.touched || f.submitted)"
+                [(ngModel)]="usuario"
+                #u="ngModel"
+                required
+                autocomplete="username"
+              />
+              <div class="invalid-feedback">Ingrese su usuario.</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="clave" class="form-label">Contraseña</label>
+              <input
+                id="clave"
+                name="clave"
+                type="password"
+                class="form-control"
+                [class.is-invalid]="c.invalid && (c.touched || f.submitted)"
+                [(ngModel)]="clave"
+                #c="ngModel"
+                required
+                autocomplete="current-password"
+              />
+              <div class="invalid-feedback">Ingrese su contraseña.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-body">
+          <p class="small text-muted mb-2">
+            Prototipo con datos de ejemplo. Elija una cuenta de prueba para completar el formulario:
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            @for (cuenta of cuentasPrueba; track cuenta.id) {
+              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="usarCuenta(cuenta)">
+                {{ cuenta.rol === 'ADMIN' ? 'Administración' : cuenta.rol === 'TECNICO' ? 'Técnico' : 'Cliente' }}
+                ({{ cuenta.usuario }})
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
