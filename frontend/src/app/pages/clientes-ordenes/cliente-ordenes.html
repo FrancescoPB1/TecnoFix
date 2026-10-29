@@ -1,0 +1,26 @@
+<h1 class="h4 mb-3">Mis órdenes</h1>
+
+<div class="row g-3">
+  @for (o of ordenes(); track o.id) {
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h5 mb-0">{{ o.codigo }}</h2>
+            <app-estado-badge [estado]="o.estado" />
+          </div>
+          <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(o.equipoId) }}</p>
+          <p class="text-muted">{{ o.falla }}</p>
+          @if (o.estado === 'PRESUPUESTO_ENVIADO') {
+            <p class="text-warning-emphasis small mb-2">Tiene un presupuesto pendiente de respuesta.</p>
+          }
+          <a class="btn btn-outline-primary btn-sm" [routerLink]="['/cliente/orden', o.id]">Ver seguimiento</a>
+        </div>
+      </div>
+    </div>
+  } @empty {
+    <div class="col-12">
+      <div class="alert alert-info mb-0">Todavía no tiene órdenes registradas.</div>
+    </div>
+  }
+</div>

@@ -1,0 +1,11 @@
+<div class="card border-warning mb-3">
+  <div class="card-header bg-warning-subtle">Presupuesto pendiente de su respuesta</div>
+  <div class="card-body">
+    <p class="mb-1"><strong>Diagnóstico:</strong> {{ orden.diagnostico }}</p>
+    <p class="fs-5 mb-3"><strong>Costo propuesto:</strong> S/ {{ orden.montoPresupuesto?.toFixed(2) }}</p>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-success" (click)="decidir.emit(true)">Aprobar</button>
+      <button type="button" class="btn btn-outline-danger" (click)="decidir.emit(false)">Rechazar</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,74 @@
+@if (!orden()) {
+  <div class="alert alert-warning">No se encontró la orden solicitada.</div>
+  <a routerLink="/cliente" class="btn btn-outline-secondary">Volver a mis órdenes</a>
+} @else {
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h4 mb-0">Seguimiento de la orden {{ orden()!.codigo }}</h1>
+    <app-estado-badge [estado]="orden()!.estado" />
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}</p>
+      <p class="mb-1"><strong>Falla reportada:</strong> {{ orden()!.falla }}</p>
+      <p class="mb-3"><strong>Accesorios entregados:</strong> {{ orden()!.accesorios || 'Ninguno' }}</p>
+
+      <ol class="list-unstyled d-flex flex-wrap gap-2 mb-0" aria-label="Avance de la orden">
+        @for (paso of pasos; track paso; let i = $index) {
+          <li>
+            <span [class]="'badge ' + (i <= pasoActual() ? 'text-bg-success' : 'text-bg-light border text-muted')">
+              {{ i + 1 }}. {{ paso }}
+            </span>
+          </li>
+        }
+      </ol>
+    </div>
+  </div>
+
+  <app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
+
+  @if (orden()!.estado === 'PRESUPUESTO_ENVIADO') {
+    <app-decision-presupuesto [orden]="orden()!" (decidir)="pendiente.set($event)" />
+  } @else if (orden()!.diagnostico) {
+    <div class="card mb-3">
+      <div class="card-body">
+        <p class="mb-1"><strong>Diagnóstico:</strong> {{ orden()!.diagnostico }}</p>
+        <p class="mb-0"><strong>Presupuesto:</strong> S/ {{ orden()!.montoPresupuesto?.toFixed(2) }}
+          @if (orden()!.decision) {
+            ({{ orden()!.decision === 'APROBADO' ? 'aprobado' : 'rechazado' }})
+          }
+        </p>
+      </div>
+    </div>
+  }
+
+  <div class="card mb-3">
+    <div class="card-header">Historial de la orden</div>
+    <ul class="list-group list-group-flush">
+      @for (m of orden()!.historial; track m.fecha) {
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between flex-wrap">
+            <span>{{ m.detalle }}</span>
+            <small class="text-muted">{{ m.fecha | date: 'dd/MM/yyyy HH:mm' }} · {{ m.responsable }}</small>
+          </div>
+        </li>
+      }
+    </ul>
+  </div>
+
+  <a routerLink="/cliente" class="btn btn-outline-secondary">Volver a mis órdenes</a>
+
+  @if (pendiente() !== null) {
+    <app-confirmar-dialogo
+      [titulo]="pendiente() ? 'Aprobar presupuesto' : 'Rechazar presupuesto'"
+      [mensaje]="
+        pendiente()
+          ? 'Confirma que aprueba el presupuesto de S/ ' + orden()!.montoPresupuesto?.toFixed(2) + ' para iniciar la reparación.'
+          : 'Si rechaza el presupuesto, el equipo se devolverá sin reparar.'
+      "
+      [textoConfirmar]="pendiente() ? 'Aprobar' : 'Rechazar'"
+      (confirmado)="confirmarDecision()"
+      (cancelado)="pendiente.set(null)"
+    />
+  }
+}
