@@ -1,0 +1,86 @@
+<h1 class="h4 mb-1">Tipos de equipo</h1>
+<p class="text-muted mb-3">Catálogo que usa recepción al registrar un equipo (por ejemplo, si llega un producto nuevo como una tablet).</p>
+
+<app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
+<app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
+<div class="row g-3">
+  <div class="col-12 col-lg-5">
+    <div class="card">
+      <div class="card-header">Nuevo tipo</div>
+      <div class="card-body">
+        <form #f="ngForm" (ngSubmit)="agregar(f)" novalidate>
+          <label for="nombre" class="form-label">Nombre del tipo</label>
+          <input
+            id="nombre"
+            name="nombre"
+            class="form-control"
+            [class.is-invalid]="n.invalid && (n.touched || f.submitted)"
+            [(ngModel)]="nombre"
+            #n="ngModel"
+            required
+            minlength="2"
+            maxlength="30"
+          />
+          <div class="invalid-feedback">Ingrese un nombre de al menos 2 caracteres.</div>
+          <button type="submit" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar tipo
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-7">
+    <div class="card">
+      <div class="card-header">Tipos registrados ({{ datos.tiposEquipo().length }})</div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover tabla-ordenes mb-0">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Equipos registrados</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of datos.tiposEquipo(); track t.id) {
+                <tr>
+                  <td class="fw-semibold">{{ t.nombre }}</td>
+                  <td>{{ datos.cantidadEquiposDeTipo(t.id) }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      [disabled]="datos.cantidadEquiposDeTipo(t.id) > 0"
+                      [attr.title]="datos.cantidadEquiposDeTipo(t.id) > 0 ? 'No se puede eliminar: tiene equipos registrados' : null"
+                      [attr.aria-label]="'Eliminar el tipo ' + t.nombre"
+                      (click)="pedirEliminar(t)"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-4">Todavía no hay tipos registrados.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (porEliminar(); as tipo) {
+  <app-confirmar-dialogo
+    titulo="Eliminar tipo de equipo"
+    [mensaje]="'Se eliminará el tipo ' + tipo.nombre + ' del catálogo.'"
+    textoConfirmar="Eliminar"
+    (confirmado)="confirmarEliminar()"
+    (cancelado)="porEliminar.set(null)"
+  />
+}

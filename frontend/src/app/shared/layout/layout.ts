@@ -27,6 +27,7 @@ export class Layout {
           { texto: 'Panel de órdenes', ruta: '/admin', icono: 'bi-speedometer2' },
           { texto: 'Usuarios', ruta: '/admin/usuarios', icono: 'bi-people' },
           { texto: 'Marcas', ruta: '/admin/marcas', icono: 'bi-tags' },
+          { texto: 'Tipos de equipo', ruta: '/admin/tipos', icono: 'bi-pc-display' },
         ];
       case 'RECEPCION':
         return [

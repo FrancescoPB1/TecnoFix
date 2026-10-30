@@ -7,6 +7,7 @@ import { Recepcion } from './pages/recepcion/recepcion';
 import { Entrega } from './pages/entrega/entrega';
 import { Marcas } from './pages/marcas/marcas';
 import { Usuarios } from './pages/usuarios/usuarios';
+import { TiposEquipo } from './pages/tipos-equipo/tipos-equipo';
 import { TecnicoOrdenes } from './pages/tecnico-ordenes/tecnico-ordenes';
 import { TecnicoDiagnostico } from './pages/tecnico-diagnostico/tecnico-diagnostico';
 import { TecnicoReparacion } from './pages/tecnico-reparacion/tecnico-reparacion';
@@ -27,9 +28,10 @@ export const routes: Routes = [
       // Solo recepción atiende el mostrador
       { path: 'admin/recepcion', component: Recepcion, canActivate: [conRol], data: { roles: ['RECEPCION'] } },
       { path: 'admin/entrega/:id', component: Entrega, canActivate: [conRol], data: { roles: ['RECEPCION'] } },
-      // Solo el administrador gestiona usuarios y marcas
+      // Solo el administrador gestiona usuarios y catálogos (marcas y tipos de equipo)
       { path: 'admin/usuarios', component: Usuarios, canActivate: [conRol], data: { roles: ['ADMIN'] } },
       { path: 'admin/marcas', component: Marcas, canActivate: [conRol], data: { roles: ['ADMIN'] } },
+      { path: 'admin/tipos', component: TiposEquipo, canActivate: [conRol], data: { roles: ['ADMIN'] } },
       // Técnico
       { path: 'tecnico', component: TecnicoOrdenes, canActivate: [conRol], data: { roles: ['TECNICO'] } },
       { path: 'tecnico/diagnostico/:id', component: TecnicoDiagnostico, canActivate: [conRol], data: { roles: ['TECNICO'] } },
