@@ -1,0 +1,86 @@
+<h1 class="h4 mb-1">Marcas de equipos</h1>
+<p class="text-muted mb-3">Catálogo que usa recepción al registrar un equipo.</p>
+
+<app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
+<app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
+<div class="row g-3">
+  <div class="col-12 col-lg-5">
+    <div class="card">
+      <div class="card-header">Nueva marca</div>
+      <div class="card-body">
+        <form #f="ngForm" (ngSubmit)="agregar(f)" novalidate>
+          <label for="nombre" class="form-label">Nombre de la marca</label>
+          <input
+            id="nombre"
+            name="nombre"
+            class="form-control"
+            [class.is-invalid]="n.invalid && (n.touched || f.submitted)"
+            [(ngModel)]="nombre"
+            #n="ngModel"
+            required
+            minlength="2"
+            maxlength="30"
+          />
+          <div class="invalid-feedback">Ingrese un nombre de al menos 2 caracteres.</div>
+          <button type="submit" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar marca
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-7">
+    <div class="card">
+      <div class="card-header">Marcas registradas ({{ datos.marcas().length }})</div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover tabla-ordenes mb-0">
+            <thead>
+              <tr>
+                <th>Marca</th>
+                <th>Equipos registrados</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of datos.marcas(); track m.id) {
+                <tr>
+                  <td class="fw-semibold">{{ m.nombre }}</td>
+                  <td>{{ datos.cantidadEquiposDeMarca(m.id) }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      [disabled]="datos.cantidadEquiposDeMarca(m.id) > 0"
+                      [attr.title]="datos.cantidadEquiposDeMarca(m.id) > 0 ? 'No se puede eliminar: tiene equipos registrados' : null"
+                      [attr.aria-label]="'Eliminar la marca ' + m.nombre"
+                      (click)="pedirEliminar(m)"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-4">Todavía no hay marcas registradas.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (porEliminar(); as marca) {
+  <app-confirmar-dialogo
+    titulo="Eliminar marca"
+    [mensaje]="'Se eliminará la marca ' + marca.nombre + ' del catálogo.'"
+    textoConfirmar="Eliminar"
+    (confirmado)="confirmarEliminar()"
+    (cancelado)="porEliminar.set(null)"
+  />
+}
