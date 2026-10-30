@@ -1,6 +1,13 @@
 // Modelos de datos del prototipo TecnoFix.
 
-export type Rol = 'ADMIN' | 'TECNICO' | 'CLIENTE';
+export type Rol = 'ADMIN' | 'RECEPCION' | 'TECNICO' | 'CLIENTE';
+
+export const ETIQUETA_ROL: Record<Rol, string> = {
+  ADMIN: 'Administrador',
+  RECEPCION: 'Recepción',
+  TECNICO: 'Técnico',
+  CLIENTE: 'Cliente',
+};
 
 export type EstadoOrden =
   | 'RECIBIDO'
@@ -18,7 +25,7 @@ export const ETIQUETA_ESTADO: Record<EstadoOrden, string> = {
   EN_REPARACION: 'En reparación',
   LISTO_PARA_ENTREGA: 'Listo para entrega',
   ENTREGADO: 'Entregado',
-  DEVUELTO_SIN_REPARAR: 'Devolución sin reparar',
+  DEVUELTO_SIN_REPARAR: 'Devuelto sin reparar',
 };
 
 export interface Usuario {
@@ -27,7 +34,18 @@ export interface Usuario {
   usuario: string;
   clave: string;
   rol: Rol;
+  activo: boolean;
   clienteId?: number;
+  // Datos del personal (recepción y técnicos)
+  dni?: string;
+  telefono?: string;
+  correo?: string;
+  especialidad?: string;
+}
+
+export interface Marca {
+  id: number;
+  nombre: string;
 }
 
 export interface Cliente {
@@ -42,7 +60,7 @@ export interface Equipo {
   id: number;
   clienteId: number;
   tipo: string;
-  marca: string;
+  marcaId: number;
   modelo: string;
   serie: string;
 }

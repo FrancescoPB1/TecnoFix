@@ -12,7 +12,7 @@ import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback'
   templateUrl: './recepcion.html',
 })
 export class Recepcion {
-  private datos = inject(DatosService);
+  readonly datos = inject(DatosService);
   private auth = inject(AuthService);
   private router = inject(Router);
 
@@ -20,7 +20,12 @@ export class Recepcion {
 
   dni = '';
   nuevoCliente = { nombres: '', correo: '', telefono: '' };
-  equipo = { tipo: 'Laptop', marca: '', modelo: '', serie: '' };
+  equipo: { tipo: string; marcaId: number | null; modelo: string; serie: string } = {
+    tipo: 'Laptop',
+    marcaId: null,
+    modelo: '',
+    serie: '',
+  };
   falla = '';
   accesorios = '';
 
@@ -28,6 +33,8 @@ export class Recepcion {
   readonly busquedaHecha = signal(false);
   readonly error = signal('');
   readonly codigoCreado = signal('');
+  // Acceso que se crea cuando el cliente es nuevo (recepción se lo entrega en el mostrador).
+  readonly accesoCliente = signal<{ usuario: string; clave: string } | null>(null);
 
   buscarCliente(): void {
     if (!/^[0-9]{8}$/.test(this.dni)) {
@@ -57,7 +64,7 @@ export class Recepcion {
     const resultado = this.datos.registrarRecepcion(
       this.dni,
       this.clienteEncontrado() ? null : this.nuevoCliente,
-      this.equipo,
+      { ...this.equipo, marcaId: this.equipo.marcaId! },
       this.falla,
       this.accesorios,
       this.auth.usuario()!.nombre,
@@ -68,6 +75,7 @@ export class Recepcion {
       return;
     }
     this.codigoCreado.set(resultado.orden!.codigo);
+    this.accesoCliente.set(resultado.accesoCliente ?? null);
   }
 
   irAlPanel(): void {
@@ -78,12 +86,13 @@ export class Recepcion {
   nuevaRecepcion(): void {
     this.dni = '';
     this.nuevoCliente = { nombres: '', correo: '', telefono: '' };
-    this.equipo = { tipo: 'Laptop', marca: '', modelo: '', serie: '' };
+    this.equipo = { tipo: 'Laptop', marcaId: null, modelo: '', serie: '' };
     this.falla = '';
     this.accesorios = '';
     this.clienteEncontrado.set(null);
     this.busquedaHecha.set(false);
     this.error.set('');
     this.codigoCreado.set('');
+    this.accesoCliente.set(null);
   }
 }

@@ -3,6 +3,12 @@
 @if (codigoCreado()) {
   <div class="alert alert-success">
     <p class="mb-2">Orden <strong>{{ codigoCreado() }}</strong> registrada correctamente. Quedó pendiente de asignación a un técnico.</p>
+    @if (accesoCliente(); as acceso) {
+      <p class="mb-2">
+        Se creó el acceso del cliente para que consulte su orden. Entréguele estos datos:
+        usuario <strong>{{ acceso.usuario }}</strong> y clave temporal <strong>{{ acceso.clave }}</strong>.
+      </p>
+    }
     <div class="d-flex flex-wrap gap-2">
       <button type="button" class="btn btn-success btn-sm" (click)="irAlPanel()">Ir al panel de órdenes</button>
       <button type="button" class="btn btn-outline-success btn-sm" (click)="nuevaRecepcion()">Registrar otra recepción</button>
@@ -110,16 +116,22 @@
           </div>
           <div class="col-12 col-md-3">
             <label for="marca" class="form-label">Marca</label>
-            <input
+            <select
               id="marca"
               name="marca"
-              class="form-control"
+              class="form-select"
               [class.is-invalid]="ma.invalid && (ma.touched || f.submitted)"
-              [(ngModel)]="equipo.marca"
+              [(ngModel)]="equipo.marcaId"
               #ma="ngModel"
               required
-            />
-            <div class="invalid-feedback">Ingrese la marca.</div>
+            >
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              @for (m of datos.marcas(); track m.id) {
+                <option [ngValue]="m.id">{{ m.nombre }}</option>
+              }
+            </select>
+            <div class="invalid-feedback">Seleccione la marca.</div>
+            <div class="form-text">¿No aparece? Pida al administrador que la registre.</div>
           </div>
           <div class="col-12 col-md-3">
             <label for="modelo" class="form-label">Modelo</label>
