@@ -1,7 +1,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <div>
     <h1 class="h4 mb-1">Usuarios del personal</h1>
-    <p class="text-muted mb-0">Cuentas de recepción y de técnicos del taller.</p>
+    <p class="text-muted mb-0">Cuentas de administradores, recepción y técnicos del taller.</p>
   </div>
   @if (!mostrarFormulario()) {
     <button type="button" class="btn btn-primary" (click)="abrirFormulario()">
@@ -14,7 +14,7 @@
 
 @if (mostrarFormulario()) {
   <div class="card mb-3">
-    <div class="card-header">Nuevo usuario del personal</div>
+    <div class="card-header">{{ editandoId() === null ? 'Nuevo usuario del personal' : 'Editar usuario' }}</div>
     <div class="card-body">
       <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
 
@@ -22,9 +22,10 @@
         <div class="row g-3">
           <div class="col-12 col-md-3">
             <label for="rol" class="form-label">Rol</label>
-            <select id="rol" name="rol" class="form-select" [(ngModel)]="nuevo.rol">
+            <select id="rol" name="rol" class="form-select" [(ngModel)]="nuevo.rol" [disabled]="editandoId() !== null">
               <option value="TECNICO">Técnico</option>
               <option value="RECEPCION">Recepcionista</option>
+              <option value="ADMIN">Administrador</option>
             </select>
           </div>
           <div class="col-12 col-md-5">
@@ -114,11 +115,14 @@
               required
               pattern="[a-z0-9._]{4,20}"
               autocomplete="off"
+              [readonly]="editandoId() !== null"
             />
             <div class="invalid-feedback">Use de 4 a 20 caracteres: minúsculas, números, punto o guion bajo.</div>
           </div>
           <div class="col-12 col-md-6">
-            <label for="clave" class="form-label">Clave temporal</label>
+            <label for="clave" class="form-label">{{
+              editandoId() === null ? 'Clave temporal' : 'Nueva clave (opcional)'
+            }}</label>
             <input
               id="clave"
               name="clave"
@@ -127,16 +131,21 @@
               [class.is-invalid]="k.invalid && (k.touched || f.submitted)"
               [(ngModel)]="nuevo.clave"
               #k="ngModel"
-              required
+              [required]="editandoId() === null"
               minlength="6"
               autocomplete="off"
             />
             <div class="invalid-feedback">La clave debe tener al menos 6 caracteres.</div>
+            @if (editandoId() !== null) {
+              <div class="form-text">Déjela vacía para conservar la clave actual.</div>
+            }
           </div>
         </div>
 
         <div class="d-flex gap-2 mt-3">
-          <button type="submit" class="btn btn-primary">Guardar usuario</button>
+          <button type="submit" class="btn btn-primary">
+            {{ editandoId() === null ? 'Guardar usuario' : 'Guardar cambios' }}
+          </button>
           <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
         </div>
       </form>
@@ -156,7 +165,7 @@
             <th>DNI</th>
             <th>Especialidad</th>
             <th>Estado</th>
-            <th>Acción</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -172,11 +181,21 @@
                   p.activo ? 'Activo' : 'Inactivo'
                 }}</span>
               </td>
-              <td>
+              <td class="text-nowrap">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary me-1"
+                  [attr.aria-label]="'Editar a ' + p.nombre"
+                  (click)="abrirEditar(p)"
+                >
+                  <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar
+                </button>
                 <button
                   type="button"
                   class="btn btn-sm"
                   [class]="p.activo ? 'btn-outline-danger' : 'btn-outline-success'"
+                  [disabled]="p.id === miId"
+                  [attr.title]="p.id === miId ? 'No puede desactivar su propia cuenta' : null"
                   [attr.aria-label]="(p.activo ? 'Desactivar a ' : 'Activar a ') + p.nombre"
                   (click)="cambiarEstado(p)"
                 >
