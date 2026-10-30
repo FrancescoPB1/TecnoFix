@@ -48,6 +48,11 @@ export interface Marca {
   nombre: string;
 }
 
+export interface TipoEquipo {
+  id: number;
+  nombre: string;
+}
+
 export interface Cliente {
   id: number;
   dni: string;
@@ -59,7 +64,7 @@ export interface Cliente {
 export interface Equipo {
   id: number;
   clienteId: number;
-  tipo: string;
+  tipoId: number;
   marcaId: number;
   modelo: string;
   serie: string;

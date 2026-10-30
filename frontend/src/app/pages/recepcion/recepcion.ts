@@ -16,12 +16,10 @@ export class Recepcion {
   private auth = inject(AuthService);
   private router = inject(Router);
 
-  readonly tipos = ['Laptop', 'PC de escritorio', 'Impresora', 'Monitor', 'Otro'];
-
   dni = '';
   nuevoCliente = { nombres: '', correo: '', telefono: '' };
-  equipo: { tipo: string; marcaId: number | null; modelo: string; serie: string } = {
-    tipo: 'Laptop',
+  equipo: { tipoId: number | null; marcaId: number | null; modelo: string; serie: string } = {
+    tipoId: null,
     marcaId: null,
     modelo: '',
     serie: '',
@@ -64,7 +62,7 @@ export class Recepcion {
     const resultado = this.datos.registrarRecepcion(
       this.dni,
       this.clienteEncontrado() ? null : this.nuevoCliente,
-      { ...this.equipo, marcaId: this.equipo.marcaId! },
+      { tipoId: this.equipo.tipoId!, marcaId: this.equipo.marcaId!, modelo: this.equipo.modelo, serie: this.equipo.serie },
       this.falla,
       this.accesorios,
       this.auth.usuario()!.nombre,
@@ -86,7 +84,7 @@ export class Recepcion {
   nuevaRecepcion(): void {
     this.dni = '';
     this.nuevoCliente = { nombres: '', correo: '', telefono: '' };
-    this.equipo = { tipo: 'Laptop', marcaId: null, modelo: '', serie: '' };
+    this.equipo = { tipoId: null, marcaId: null, modelo: '', serie: '' };
     this.falla = '';
     this.accesorios = '';
     this.clienteEncontrado.set(null);

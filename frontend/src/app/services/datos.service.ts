@@ -7,17 +7,19 @@ import {
   MovimientoOrden,
   Orden,
   Rol,
+  TipoEquipo,
   Usuario,
 } from '../models/modelos';
 
 /**
  * Data Service del prototipo.
- * Guarda los datos de ejemplo en memoria con signals
+ * Guarda los datos de ejemplo en memoria con signals. En el Capítulo 6 estas
+ * operaciones se reemplazarán por peticiones HttpClient a la API REST.
  */
 @Injectable({ providedIn: 'root' })
 export class DatosService {
   readonly usuarios = signal<Usuario[]>([
-        { id: 1, nombre: 'Marcela Torres', usuario: 'recepcion', clave: 'demo123', rol: 'RECEPCION', activo: true, dni: '40125478', telefono: '944100200', correo: 'marcela.torres@correo.com' },
+    { id: 1, nombre: 'Marcela Torres', usuario: 'recepcion', clave: 'demo123', rol: 'RECEPCION', activo: true, dni: '40125478', telefono: '944100200', correo: 'marcela.torres@correo.com' },
     { id: 2, nombre: 'Julio Quispe', usuario: 'tecnico1', clave: 'demo123', rol: 'TECNICO', activo: true, dni: '41236587', telefono: '955200300', correo: 'julio.quispe@correo.com', especialidad: 'Laptops' },
     { id: 3, nombre: 'Carla Vera', usuario: 'tecnico2', clave: 'demo123', rol: 'TECNICO', activo: true, dni: '42587963', telefono: '966300400', correo: 'carla.vera@correo.com', especialidad: 'PC de escritorio' },
     { id: 4, nombre: 'Rolando Díaz', usuario: 'tecnico3', clave: 'demo123', rol: 'TECNICO', activo: true, dni: '43698521', telefono: '977400500', correo: 'rolando.diaz@correo.com', especialidad: 'Impresoras y monitores' },
@@ -37,6 +39,14 @@ export class DatosService {
     { id: 8, nombre: 'Canon' },
   ]);
 
+  readonly tiposEquipo = signal<TipoEquipo[]>([
+    { id: 1, nombre: 'Laptop' },
+    { id: 2, nombre: 'PC de escritorio' },
+    { id: 3, nombre: 'Impresora' },
+    { id: 4, nombre: 'Monitor' },
+    { id: 5, nombre: 'Otro' },
+  ]);
+
   readonly clientes = signal<Cliente[]>([
     { id: 1, dni: '45871236', nombres: 'Luis Paredes Rojas', correo: 'luis.paredes@correo.com', telefono: '987654321' },
     { id: 2, dni: '72418596', nombres: 'Ana Rojas Vega', correo: 'ana.rojas@correo.com', telefono: '945123678' },
@@ -44,11 +54,11 @@ export class DatosService {
   ]);
 
   readonly equipos = signal<Equipo[]>([
-    { id: 1, clienteId: 1, tipo: 'Laptop', marcaId: 1, modelo: 'Pavilion 15', serie: '5CD1234ABC' },
-    { id: 2, clienteId: 2, tipo: 'PC de escritorio', marcaId: 3, modelo: 'ThinkCentre M70', serie: 'PC-77412' },
-    { id: 3, clienteId: 1, tipo: 'Laptop', marcaId: 2, modelo: 'Inspiron 3501', serie: 'DL-8842' },
-    { id: 4, clienteId: 3, tipo: 'Impresora', marcaId: 4, modelo: 'L3150', serie: 'EP-30551' },
-    { id: 5, clienteId: 2, tipo: 'Laptop', marcaId: 3, modelo: 'IdeaPad 3', serie: 'LN-90217' },
+    { id: 1, clienteId: 1, tipoId: 1, marcaId: 1, modelo: 'Pavilion 15', serie: '5CD1234ABC' },
+    { id: 2, clienteId: 2, tipoId: 2, marcaId: 3, modelo: 'ThinkCentre M70', serie: 'PC-77412' },
+    { id: 3, clienteId: 1, tipoId: 1, marcaId: 2, modelo: 'Inspiron 3501', serie: 'DL-8842' },
+    { id: 4, clienteId: 3, tipoId: 3, marcaId: 4, modelo: 'L3150', serie: 'EP-30551' },
+    { id: 5, clienteId: 2, tipoId: 1, marcaId: 3, modelo: 'IdeaPad 3', serie: 'LN-90217' },
   ]);
 
   readonly ordenes = signal<Orden[]>([
@@ -144,9 +154,9 @@ export class DatosService {
     return this.usuarios().filter((u) => u.rol === 'TECNICO' && u.activo);
   }
 
-  /** Personal que administra el sistema desde la pantalla de usuarios. */
+  /** Personal del taller (administradores, recepción y técnicos): se gestiona en la pantalla de usuarios. */
   personal(): Usuario[] {
-    return this.usuarios().filter((u) => u.rol === 'RECEPCION' || u.rol === 'TECNICO');
+    return this.usuarios().filter((u) => u.rol !== 'CLIENTE');
   }
 
   nombreMarca(id: number): string {
@@ -157,13 +167,30 @@ export class DatosService {
     return this.equipos().filter((e) => e.marcaId === id).length;
   }
 
+  nombreTipo(id: number): string {
+    return this.tiposEquipo().find((t) => t.id === id)?.nombre ?? '';
+  }
+
+  cantidadEquiposDeTipo(id: number): number {
+    return this.equipos().filter((e) => e.tipoId === id).length;
+  }
+
+  cantidadOrdenesDeCliente(clienteId: number): number {
+    return this.ordenes().filter((o) => o.clienteId === clienteId).length;
+  }
+
+  /** Cuenta de acceso del cliente (se crea cuando recepción lo registra). */
+  accesoDeCliente(clienteId: number): Usuario | undefined {
+    return this.usuarios().find((u) => u.rol === 'CLIENTE' && u.clienteId === clienteId);
+  }
+
   nombreTecnico(id?: number): string {
     return this.usuarios().find((u) => u.id === id)?.nombre ?? 'Sin asignar';
   }
 
   descripcionEquipo(id: number): string {
     const e = this.equipo(id);
-    return e ? `${e.tipo} ${this.nombreMarca(e.marcaId)} ${e.modelo}` : '';
+    return e ? `${this.nombreTipo(e.tipoId)} ${this.nombreMarca(e.marcaId)} ${e.modelo}` : '';
   }
 
   // ---------- Operaciones del flujo de atención ----------
@@ -175,7 +202,7 @@ export class DatosService {
   registrarRecepcion(
     dni: string,
     nuevoCliente: { nombres: string; correo: string; telefono: string } | null,
-    equipo: { tipo: string; marcaId: number; modelo: string; serie: string },
+    equipo: { tipoId: number; marcaId: number; modelo: string; serie: string },
     falla: string,
     accesorios: string,
     responsable: string,
@@ -186,23 +213,12 @@ export class DatosService {
       if (!nuevoCliente) {
         return { error: 'El cliente no existe; complete sus datos.' };
       }
-      cliente = { id: this.clientes().length + 1, dni, ...nuevoCliente };
-      this.clientes.update((lista) => [...lista, cliente!]);
-
-      // Acceso del cliente: lo crea recepción al registrarlo, así solo entran quienes dejaron un equipo.
-      accesoCliente = { usuario: dni, clave: 'tf' + dni.slice(-4) };
-      this.usuarios.update((lista) => [
-        ...lista,
-        {
-          id: this.siguienteIdUsuario(),
-          nombre: cliente!.nombres,
-          usuario: accesoCliente!.usuario,
-          clave: accesoCliente!.clave,
-          rol: 'CLIENTE',
-          activo: true,
-          clienteId: cliente!.id,
-        },
-      ]);
+      const creado = this.crearCliente({ dni, ...nuevoCliente });
+      if (creado.error) {
+        return { error: creado.error };
+      }
+      cliente = creado.cliente!;
+      accesoCliente = creado.acceso;
     }
 
     // Regla: no se permite otra orden abierta del mismo equipo.
@@ -238,6 +254,96 @@ export class DatosService {
     return { orden, accesoCliente };
   }
 
+  // ---------- Clientes ----------
+
+  /**
+   * Registra un cliente y crea su acceso (usuario = DNI y clave temporal). Lo usan la pantalla de
+   * clientes y la recepción de un equipo.
+   */
+  crearCliente(datos: {
+    dni: string;
+    nombres: string;
+    correo: string;
+    telefono: string;
+  }): { cliente?: Cliente; acceso?: { usuario: string; clave: string }; error?: string } {
+    if (this.buscarClientePorDni(datos.dni)) {
+      return { error: `Ya existe un cliente con el DNI ${datos.dni}.` };
+    }
+    if (this.usuarios().some((u) => u.usuario === datos.dni)) {
+      return { error: `El usuario ${datos.dni} ya existe en el sistema.` };
+    }
+    const cliente: Cliente = {
+      id: Math.max(0, ...this.clientes().map((c) => c.id)) + 1,
+      dni: datos.dni,
+      nombres: datos.nombres.trim(),
+      correo: datos.correo.trim(),
+      telefono: datos.telefono,
+    };
+    this.clientes.update((lista) => [...lista, cliente]);
+
+    // Acceso del cliente: lo crea recepción al registrarlo, así solo entran quienes dejaron un equipo.
+    const acceso = { usuario: datos.dni, clave: this.claveTemporalCliente(datos.dni) };
+    this.usuarios.update((lista) => [
+      ...lista,
+      {
+        id: this.siguienteIdUsuario(),
+        nombre: cliente.nombres,
+        usuario: acceso.usuario,
+        clave: acceso.clave,
+        rol: 'CLIENTE',
+        activo: true,
+        clienteId: cliente.id,
+      },
+    ]);
+    return { cliente, acceso };
+  }
+
+  /** Recepción corrige los datos de contacto del cliente (el DNI no se modifica porque es su usuario). */
+  actualizarCliente(id: number, datos: { nombres: string; correo: string; telefono: string }): void {
+    const nombres = datos.nombres.trim();
+    this.clientes.update((lista) =>
+      lista.map((c) => (c.id === id ? { ...c, nombres, correo: datos.correo.trim(), telefono: datos.telefono } : c)),
+    );
+    this.usuarios.update((lista) =>
+      lista.map((u) => (u.rol === 'CLIENTE' && u.clienteId === id ? { ...u, nombre: nombres } : u)),
+    );
+  }
+
+  /** Vuelve a dejar la clave temporal del cliente (por ejemplo, si la olvidó). */
+  restablecerClaveCliente(clienteId: number): { usuario: string; clave: string } | undefined {
+    const acceso = this.accesoDeCliente(clienteId);
+    const cliente = this.cliente(clienteId);
+    if (!acceso || !cliente) {
+      return undefined;
+    }
+    const clave = this.claveTemporalCliente(cliente.dni);
+    this.usuarios.update((lista) => lista.map((u) => (u.id === acceso.id ? { ...u, clave } : u)));
+    return { usuario: acceso.usuario, clave };
+  }
+
+  // ---------- Tipos de equipo (catálogo) ----------
+
+  agregarTipoEquipo(nombre: string): { error?: string } {
+    const limpio = nombre.trim();
+    if (limpio.length < 2) {
+      return { error: 'El nombre del tipo debe tener al menos 2 caracteres.' };
+    }
+    if (this.tiposEquipo().some((t) => t.nombre.toLowerCase() === limpio.toLowerCase())) {
+      return { error: `El tipo ${limpio} ya está registrado.` };
+    }
+    const id = Math.max(0, ...this.tiposEquipo().map((t) => t.id)) + 1;
+    this.tiposEquipo.update((lista) => [...lista, { id, nombre: limpio }]);
+    return {};
+  }
+
+  eliminarTipoEquipo(id: number): { error?: string } {
+    if (this.cantidadEquiposDeTipo(id) > 0) {
+      return { error: 'No se puede eliminar: hay equipos registrados con ese tipo.' };
+    }
+    this.tiposEquipo.update((lista) => lista.filter((t) => t.id !== id));
+    return {};
+  }
+
   // ---------- Marcas (catálogo) ----------
 
   agregarMarca(nombre: string): { error?: string } {
@@ -261,7 +367,7 @@ export class DatosService {
     return {};
   }
 
-  // ---------- Personal (usuarios de recepción y técnicos) ----------
+  // ---------- Personal (administradores, recepción y técnicos) ----------
 
   registrarPersonal(datos: {
     rol: Rol;
@@ -293,6 +399,39 @@ export class DatosService {
       especialidad: datos.rol === 'TECNICO' ? datos.especialidad.trim() : undefined,
     };
     this.usuarios.update((lista) => [...lista, nuevo]);
+    return {};
+  }
+
+  /** El administrador corrige los datos de una cuenta del personal; la clave solo cambia si se escribe una nueva. */
+  actualizarPersonal(
+    id: number,
+    datos: {
+      nombre: string;
+      dni: string;
+      telefono: string;
+      correo: string;
+      especialidad: string;
+      clave: string;
+    },
+  ): { error?: string } {
+    if (this.personal().some((u) => u.id !== id && u.dni === datos.dni)) {
+      return { error: 'Ya hay una persona del personal registrada con ese DNI.' };
+    }
+    this.usuarios.update((lista) =>
+      lista.map((u) =>
+        u.id !== id
+          ? u
+          : {
+              ...u,
+              nombre: datos.nombre.trim(),
+              dni: datos.dni,
+              telefono: datos.telefono,
+              correo: datos.correo.trim(),
+              especialidad: u.rol === 'TECNICO' ? datos.especialidad.trim() : undefined,
+              clave: datos.clave ? datos.clave : u.clave,
+            },
+      ),
+    );
     return {};
   }
 
@@ -379,6 +518,10 @@ export class DatosService {
   }
 
   // ---------- Auxiliares ----------
+
+  private claveTemporalCliente(dni: string): string {
+    return 'tf' + dni.slice(-4);
+  }
 
   private siguienteIdUsuario(): number {
     return Math.max(0, ...this.usuarios().map((u) => u.id)) + 1;

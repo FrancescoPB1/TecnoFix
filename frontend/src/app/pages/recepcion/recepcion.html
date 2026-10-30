@@ -108,11 +108,22 @@
         <div class="row g-3">
           <div class="col-12 col-md-3">
             <label for="tipo" class="form-label">Tipo</label>
-            <select id="tipo" name="tipo" class="form-select" [(ngModel)]="equipo.tipo" required>
-              @for (t of tipos; track t) {
-                <option [value]="t">{{ t }}</option>
+            <select
+              id="tipo"
+              name="tipo"
+              class="form-select"
+              [class.is-invalid]="ti.invalid && (ti.touched || f.submitted)"
+              [(ngModel)]="equipo.tipoId"
+              #ti="ngModel"
+              required
+            >
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              @for (t of datos.tiposEquipo(); track t.id) {
+                <option [ngValue]="t.id">{{ t.nombre }}</option>
               }
             </select>
+            <div class="invalid-feedback">Seleccione el tipo.</div>
+            <div class="form-text">¿No aparece? Pida al administrador que lo registre.</div>
           </div>
           <div class="col-12 col-md-3">
             <label for="marca" class="form-label">Marca</label>
