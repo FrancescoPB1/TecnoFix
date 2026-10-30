@@ -17,12 +17,13 @@ import {
 @Injectable({ providedIn: 'root' })
 export class DatosService {
   readonly usuarios = signal<Usuario[]>([
-    { id: 1, nombre: 'Marcela Torres', usuario: 'recepcion', clave: 'demo123', rol: 'ADMIN', activo: true, dni: '40125478', telefono: '944100200', correo: 'marcela.torres@correo.com' },
+        { id: 1, nombre: 'Marcela Torres', usuario: 'recepcion', clave: 'demo123', rol: 'RECEPCION', activo: true, dni: '40125478', telefono: '944100200', correo: 'marcela.torres@correo.com' },
     { id: 2, nombre: 'Julio Quispe', usuario: 'tecnico1', clave: 'demo123', rol: 'TECNICO', activo: true, dni: '41236587', telefono: '955200300', correo: 'julio.quispe@correo.com', especialidad: 'Laptops' },
     { id: 3, nombre: 'Carla Vera', usuario: 'tecnico2', clave: 'demo123', rol: 'TECNICO', activo: true, dni: '42587963', telefono: '966300400', correo: 'carla.vera@correo.com', especialidad: 'PC de escritorio' },
     { id: 4, nombre: 'Rolando Díaz', usuario: 'tecnico3', clave: 'demo123', rol: 'TECNICO', activo: true, dni: '43698521', telefono: '977400500', correo: 'rolando.diaz@correo.com', especialidad: 'Impresoras y monitores' },
     { id: 5, nombre: 'Luis Paredes Rojas', usuario: 'cliente1', clave: 'demo123', rol: 'CLIENTE', activo: true, clienteId: 1 },
     { id: 6, nombre: 'Ana Rojas Vega', usuario: 'cliente2', clave: 'demo123', rol: 'CLIENTE', activo: true, clienteId: 2 },
+    { id: 7, nombre: 'Ricardo Salazar', usuario: 'admin', clave: 'demo123', rol: 'ADMIN', activo: true, dni: '40789654', telefono: '988500600', correo: 'ricardo.salazar@correo.com' },
   ]);
 
   readonly marcas = signal<Marca[]>([

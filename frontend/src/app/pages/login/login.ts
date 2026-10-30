@@ -3,7 +3,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DatosService } from '../../services/datos.service';
 import { AuthService } from '../../services/auth.service';
-import { Usuario } from '../../models/modelos';
+import { ETIQUETA_ROL, Usuario } from '../../models/modelos';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
 
 @Component({
@@ -20,10 +20,12 @@ export class Login {
   clave = '';
   readonly error = signal('');
 
+  readonly etiquetaRol = ETIQUETA_ROL;
+
   // Cuentas de prueba que se muestran en el prototipo (una por rol).
   readonly cuentasPrueba: Usuario[] = this.datos
     .usuarios()
-    .filter((u) => ['recepcion', 'tecnico1', 'cliente1'].includes(u.usuario));
+    .filter((u) => ['admin', 'recepcion', 'tecnico1', 'cliente1'].includes(u.usuario));
 
   constructor() {
     const actual = this.auth.usuario();

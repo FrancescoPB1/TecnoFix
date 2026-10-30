@@ -1,21 +1,26 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <h1 class="h4 mb-0">Panel de órdenes</h1>
-  <a class="btn btn-primary" routerLink="/admin/recepcion">Nueva orden</a>
+  @if (esRecepcion) {
+    <a class="btn btn-primary" routerLink="/admin/recepcion">
+      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva orden
+    </a>
+  }
 </div>
 
 <div class="row g-3 mb-4">
   @for (r of resumen(); track r.estado) {
     <div class="col-6 col-lg-3">
       <a
-        class="card text-decoration-none h-100"
-        [class.border-primary]="estadoFiltro() === r.estado"
+        class="card stat-card text-decoration-none h-100"
+        [class.activo]="estadoFiltro() === r.estado"
         routerLink="/admin"
         [queryParams]="{ estado: r.estado }"
       >
-        <div class="card-body">
-          <div class="text-muted small">{{ r.titulo }}</div>
-          <div class="display-6">{{ r.cantidad }}</div>
-        </div>
+        <span [class]="'stat-icon ' + r.color"><i [class]="'bi ' + r.icono" aria-hidden="true"></i></span>
+        <span>
+          <span class="d-block text-muted small">{{ r.titulo }}</span>
+          <span class="stat-numero">{{ r.cantidad }}</span>
+        </span>
       </a>
     </div>
   }
@@ -81,8 +86,10 @@
                     </select>
                     <button type="button" class="btn btn-outline-primary" (click)="asignar(o)">Asignar</button>
                   </div>
-                } @else if (puedeEntregarse(o)) {
+                } @else if (puedeEntregarse(o) && esRecepcion) {
                   <a class="btn btn-sm btn-success" [routerLink]="['/admin/entrega', o.id]">Registrar entrega</a>
+                } @else if (puedeEntregarse(o)) {
+                  <span class="text-muted small">Pendiente de entrega</span>
                 } @else {
                   <span class="text-muted">—</span>
                 }

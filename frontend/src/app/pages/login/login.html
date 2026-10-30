@@ -1,14 +1,21 @@
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-7 col-lg-5">
-      <div class="text-center mb-4">
-        <h1 class="h3 mb-1">TecnoFix</h1>
-        <p class="text-muted mb-0">Gestión de órdenes de servicio técnico</p>
-      </div>
+<div class="login-wrap">
+  <section class="login-brand">
+    <img src="logo.svg" alt="Logo de TecnoFix" />
+    <h1>TecnoFix</h1>
+    <p class="lead mb-0">Gestión de órdenes de servicio técnico</p>
+    <ul>
+      <li><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>Registro de cada equipo que ingresa al taller</li>
+      <li><i class="bi bi-clipboard-check" aria-hidden="true"></i>Seguimiento del avance de cada reparación</li>
+      <li><i class="bi bi-receipt" aria-hidden="true"></i>Presupuestos aprobados por el cliente con constancia</li>
+    </ul>
+  </section>
 
-      <div class="card shadow-sm">
+  <section class="login-form-panel">
+    <div class="login-box">
+      <div class="card">
         <div class="card-body p-4">
-          <h2 class="h5 mb-3">Iniciar sesión</h2>
+          <h2 class="h4 fw-bold mb-1">Iniciar sesión</h2>
+          <p class="text-muted mb-3">Ingrese con el usuario que le entregó el taller.</p>
 
           <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
 
@@ -18,7 +25,7 @@
               <input
                 id="usuario"
                 name="usuario"
-                class="form-control"
+                class="form-control form-control-lg"
                 [class.is-invalid]="u.invalid && (u.touched || f.submitted)"
                 [(ngModel)]="usuario"
                 #u="ngModel"
@@ -34,7 +41,7 @@
                 id="clave"
                 name="clave"
                 type="password"
-                class="form-control"
+                class="form-control form-control-lg"
                 [class.is-invalid]="c.invalid && (c.touched || f.submitted)"
                 [(ngModel)]="clave"
                 #c="ngModel"
@@ -44,7 +51,7 @@
               <div class="invalid-feedback">Ingrese su contraseña.</div>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+            <button type="submit" class="btn btn-primary btn-lg w-100">Ingresar</button>
           </form>
         </div>
       </div>
@@ -52,18 +59,18 @@
       <div class="card mt-3">
         <div class="card-body">
           <p class="small text-muted mb-2">
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
             Prototipo con datos de ejemplo. Elija una cuenta de prueba para completar el formulario:
           </p>
           <div class="d-flex flex-wrap gap-2">
             @for (cuenta of cuentasPrueba; track cuenta.id) {
               <button type="button" class="btn btn-outline-secondary btn-sm" (click)="usarCuenta(cuenta)">
-                {{ cuenta.rol === 'ADMIN' ? 'Administración' : cuenta.rol === 'TECNICO' ? 'Técnico' : 'Cliente' }}
-                ({{ cuenta.usuario }})
+                {{ etiquetaRol[cuenta.rol] }} ({{ cuenta.usuario }})
               </button>
             }
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </div>

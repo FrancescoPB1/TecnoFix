@@ -18,7 +18,7 @@ export class AuthService {
   iniciarSesion(usuario: string, clave: string): boolean {
     const encontrado = this.datos
       .usuarios()
-      .find((u) => u.usuario === usuario.trim() && u.clave === clave);
+      .find((u) => u.usuario === usuario.trim() && u.clave === clave && u.activo);
     if (!encontrado) {
       return false;
     }
@@ -44,6 +44,7 @@ export class AuthService {
   rutaInicio(rol: Rol): string {
     switch (rol) {
       case 'ADMIN':
+      case 'RECEPCION':
         return '/admin';
       case 'TECNICO':
         return '/tecnico';

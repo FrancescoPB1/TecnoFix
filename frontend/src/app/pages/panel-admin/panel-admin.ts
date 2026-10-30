@@ -19,6 +19,9 @@ export class PanelAdmin {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
+  // Solo recepción registra equipos y entregas; el administrador supervisa el panel.
+  readonly esRecepcion = this.auth.usuario()?.rol === 'RECEPCION';
+
   readonly estados = Object.entries(ETIQUETA_ESTADO) as [EstadoOrden, string][];
 
   readonly texto = signal('');
@@ -50,10 +53,10 @@ export class PanelAdmin {
     const lista = this.datos.ordenes();
     const contar = (e: EstadoOrden) => lista.filter((o) => o.estado === e).length;
     return [
-      { estado: 'RECIBIDO' as EstadoOrden, titulo: 'Sin asignar', cantidad: contar('RECIBIDO') },
-      { estado: 'EN_DIAGNOSTICO' as EstadoOrden, titulo: 'En diagnóstico', cantidad: contar('EN_DIAGNOSTICO') },
-      { estado: 'EN_REPARACION' as EstadoOrden, titulo: 'En reparación', cantidad: contar('EN_REPARACION') },
-      { estado: 'LISTO_PARA_ENTREGA' as EstadoOrden, titulo: 'Listas para entrega', cantidad: contar('LISTO_PARA_ENTREGA') },
+      { estado: 'RECIBIDO' as EstadoOrden, titulo: 'Sin asignar', cantidad: contar('RECIBIDO'), icono: 'bi-inbox', color: 'stat-gris' },
+      { estado: 'EN_DIAGNOSTICO' as EstadoOrden, titulo: 'En diagnóstico', cantidad: contar('EN_DIAGNOSTICO'), icono: 'bi-search', color: 'stat-celeste' },
+      { estado: 'EN_REPARACION' as EstadoOrden, titulo: 'En reparación', cantidad: contar('EN_REPARACION'), icono: 'bi-wrench-adjustable', color: 'stat-azul' },
+      { estado: 'LISTO_PARA_ENTREGA' as EstadoOrden, titulo: 'Listas para entrega', cantidad: contar('LISTO_PARA_ENTREGA'), icono: 'bi-check2-circle', color: 'stat-verde' },
     ];
   });
 
