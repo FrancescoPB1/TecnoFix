@@ -1,0 +1,196 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-1">Usuarios del personal</h1>
+    <p class="text-muted mb-0">Cuentas de recepción y de técnicos del taller.</p>
+  </div>
+  @if (!mostrarFormulario()) {
+    <button type="button" class="btn btn-primary" (click)="abrirFormulario()">
+      <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Nuevo usuario
+    </button>
+  }
+</div>
+
+<app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
+
+@if (mostrarFormulario()) {
+  <div class="card mb-3">
+    <div class="card-header">Nuevo usuario del personal</div>
+    <div class="card-body">
+      <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
+      <form #f="ngForm" (ngSubmit)="guardar(f)" novalidate>
+        <div class="row g-3">
+          <div class="col-12 col-md-3">
+            <label for="rol" class="form-label">Rol</label>
+            <select id="rol" name="rol" class="form-select" [(ngModel)]="nuevo.rol">
+              <option value="TECNICO">Técnico</option>
+              <option value="RECEPCION">Recepcionista</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-5">
+            <label for="nombre" class="form-label">Nombres y apellidos</label>
+            <input
+              id="nombre"
+              name="nombre"
+              class="form-control"
+              [class.is-invalid]="nm.invalid && (nm.touched || f.submitted)"
+              [(ngModel)]="nuevo.nombre"
+              #nm="ngModel"
+              required
+              minlength="5"
+            />
+            <div class="invalid-feedback">Ingrese los nombres y apellidos completos.</div>
+          </div>
+          <div class="col-12 col-md-4">
+            <label for="dni" class="form-label">DNI</label>
+            <input
+              id="dni"
+              name="dni"
+              class="form-control"
+              [class.is-invalid]="d.invalid && (d.touched || f.submitted)"
+              [(ngModel)]="nuevo.dni"
+              #d="ngModel"
+              required
+              pattern="[0-9]{8}"
+              inputmode="numeric"
+              maxlength="8"
+            />
+            <div class="invalid-feedback">El DNI debe tener 8 dígitos.</div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label for="telefono" class="form-label">Teléfono</label>
+            <input
+              id="telefono"
+              name="telefono"
+              class="form-control"
+              [class.is-invalid]="t.invalid && (t.touched || f.submitted)"
+              [(ngModel)]="nuevo.telefono"
+              #t="ngModel"
+              required
+              pattern="[0-9]{9}"
+              inputmode="numeric"
+              maxlength="9"
+            />
+            <div class="invalid-feedback">El teléfono debe tener 9 dígitos.</div>
+          </div>
+          <div class="col-12 col-md-4">
+            <label for="correo" class="form-label">Correo</label>
+            <input
+              id="correo"
+              name="correo"
+              type="email"
+              class="form-control"
+              [class.is-invalid]="c.invalid && (c.touched || f.submitted)"
+              [(ngModel)]="nuevo.correo"
+              #c="ngModel"
+              required
+              email
+            />
+            <div class="invalid-feedback">Ingrese un correo válido.</div>
+          </div>
+          @if (nuevo.rol === 'TECNICO') {
+            <div class="col-12 col-md-4">
+              <label for="especialidad" class="form-label">Especialidad (opcional)</label>
+              <input
+                id="especialidad"
+                name="especialidad"
+                class="form-control"
+                placeholder="Ej.: Laptops, impresoras"
+                [(ngModel)]="nuevo.especialidad"
+              />
+            </div>
+          }
+
+          <div class="col-12 col-md-6">
+            <label for="usuario" class="form-label">Usuario</label>
+            <input
+              id="usuario"
+              name="usuario"
+              class="form-control"
+              [class.is-invalid]="u.invalid && (u.touched || f.submitted)"
+              [(ngModel)]="nuevo.usuario"
+              #u="ngModel"
+              required
+              pattern="[a-z0-9._]{4,20}"
+              autocomplete="off"
+            />
+            <div class="invalid-feedback">Use de 4 a 20 caracteres: minúsculas, números, punto o guion bajo.</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label for="clave" class="form-label">Clave temporal</label>
+            <input
+              id="clave"
+              name="clave"
+              type="text"
+              class="form-control"
+              [class.is-invalid]="k.invalid && (k.touched || f.submitted)"
+              [(ngModel)]="nuevo.clave"
+              #k="ngModel"
+              required
+              minlength="6"
+              autocomplete="off"
+            />
+            <div class="invalid-feedback">La clave debe tener al menos 6 caracteres.</div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary">Guardar usuario</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover tabla-ordenes mb-0">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th>Usuario</th>
+            <th>DNI</th>
+            <th>Especialidad</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of datos.personal(); track p.id) {
+            <tr>
+              <td class="fw-semibold">{{ p.nombre }}</td>
+              <td>{{ etiquetaRol[p.rol] }}</td>
+              <td>{{ p.usuario }}</td>
+              <td>{{ p.dni }}</td>
+              <td>{{ p.especialidad || '—' }}</td>
+              <td>
+                <span class="badge rounded-pill" [class]="p.activo ? 'text-bg-success' : 'text-bg-secondary'">{{
+                  p.activo ? 'Activo' : 'Inactivo'
+                }}</span>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [class]="p.activo ? 'btn-outline-danger' : 'btn-outline-success'"
+                  [attr.aria-label]="(p.activo ? 'Desactivar a ' : 'Activar a ') + p.nombre"
+                  (click)="cambiarEstado(p)"
+                >
+                  {{ p.activo ? 'Desactivar' : 'Activar' }}
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">Todavía no hay personal registrado.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
