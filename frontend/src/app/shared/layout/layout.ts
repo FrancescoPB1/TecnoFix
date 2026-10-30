@@ -25,6 +25,7 @@ export class Layout {
       case 'ADMIN':
         return [
           { texto: 'Panel de órdenes', ruta: '/admin', icono: 'bi-speedometer2' },
+          { texto: 'Clientes', ruta: '/admin/clientes', icono: 'bi-person-lines-fill' },
           { texto: 'Usuarios', ruta: '/admin/usuarios', icono: 'bi-people' },
           { texto: 'Marcas', ruta: '/admin/marcas', icono: 'bi-tags' },
           { texto: 'Tipos de equipo', ruta: '/admin/tipos', icono: 'bi-pc-display' },
@@ -33,6 +34,7 @@ export class Layout {
         return [
           { texto: 'Panel de órdenes', ruta: '/admin', icono: 'bi-speedometer2' },
           { texto: 'Recepción de equipo', ruta: '/admin/recepcion', icono: 'bi-box-arrow-in-down' },
+          { texto: 'Clientes', ruta: '/admin/clientes', icono: 'bi-person-lines-fill' },
         ];
       case 'TECNICO':
         return [{ texto: 'Órdenes asignadas', ruta: '/tecnico', icono: 'bi-tools' }];

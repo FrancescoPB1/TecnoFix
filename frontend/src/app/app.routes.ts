@@ -7,6 +7,7 @@ import { Recepcion } from './pages/recepcion/recepcion';
 import { Entrega } from './pages/entrega/entrega';
 import { Marcas } from './pages/marcas/marcas';
 import { Usuarios } from './pages/usuarios/usuarios';
+import { Clientes } from './pages/clientes/clientes';
 import { TiposEquipo } from './pages/tipos-equipo/tipos-equipo';
 import { TecnicoOrdenes } from './pages/tecnico-ordenes/tecnico-ordenes';
 import { TecnicoDiagnostico } from './pages/tecnico-diagnostico/tecnico-diagnostico';
@@ -28,6 +29,8 @@ export const routes: Routes = [
       // Solo recepción atiende el mostrador
       { path: 'admin/recepcion', component: Recepcion, canActivate: [conRol], data: { roles: ['RECEPCION'] } },
       { path: 'admin/entrega/:id', component: Entrega, canActivate: [conRol], data: { roles: ['RECEPCION'] } },
+      // Clientes: recepción los registra y modifica; el administrador los consulta
+      { path: 'admin/clientes', component: Clientes, canActivate: [conRol], data: { roles: ['ADMIN', 'RECEPCION'] } },
       // Solo el administrador gestiona usuarios y catálogos (marcas y tipos de equipo)
       { path: 'admin/usuarios', component: Usuarios, canActivate: [conRol], data: { roles: ['ADMIN'] } },
       { path: 'admin/marcas', component: Marcas, canActivate: [conRol], data: { roles: ['ADMIN'] } },

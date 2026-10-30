@@ -1,0 +1,195 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-1">Clientes</h1>
+    <p class="text-muted mb-0">
+      @if (esRecepcion) {
+        Registre a los clientes y corrija sus datos. Cada cliente nuevo recibe su acceso al sistema.
+      } @else {
+        Clientes registrados por recepción (solo consulta).
+      }
+    </p>
+  </div>
+  @if (esRecepcion && !mostrarFormulario()) {
+    <button type="button" class="btn btn-primary" (click)="abrirNuevo()">
+      <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Nuevo cliente
+    </button>
+  }
+</div>
+
+<app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
+
+@if (mostrarFormulario()) {
+  <div class="card mb-3">
+    <div class="card-header">{{ editandoId() === null ? 'Nuevo cliente' : 'Editar cliente' }}</div>
+    <div class="card-body">
+      <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
+      <form #f="ngForm" (ngSubmit)="guardar(f)" novalidate>
+        <div class="row g-3">
+          <div class="col-12 col-md-3">
+            <label for="dni" class="form-label">DNI</label>
+            <input
+              id="dni"
+              name="dni"
+              class="form-control"
+              [class.is-invalid]="d.invalid && (d.touched || f.submitted)"
+              [(ngModel)]="form.dni"
+              #d="ngModel"
+              required
+              pattern="[0-9]{8}"
+              inputmode="numeric"
+              maxlength="8"
+              [readonly]="editandoId() !== null"
+            />
+            <div class="invalid-feedback">El DNI debe tener 8 dígitos.</div>
+            @if (editandoId() !== null) {
+              <div class="form-text">El DNI no se modifica: es el usuario del cliente.</div>
+            }
+          </div>
+          <div class="col-12 col-md-5">
+            <label for="nombres" class="form-label">Nombres y apellidos</label>
+            <input
+              id="nombres"
+              name="nombres"
+              class="form-control"
+              [class.is-invalid]="n.invalid && (n.touched || f.submitted)"
+              [(ngModel)]="form.nombres"
+              #n="ngModel"
+              required
+              minlength="5"
+            />
+            <div class="invalid-feedback">Ingrese los nombres y apellidos completos.</div>
+          </div>
+          <div class="col-12 col-md-4">
+            <label for="telefono" class="form-label">Teléfono</label>
+            <input
+              id="telefono"
+              name="telefono"
+              class="form-control"
+              [class.is-invalid]="t.invalid && (t.touched || f.submitted)"
+              [(ngModel)]="form.telefono"
+              #t="ngModel"
+              required
+              pattern="[0-9]{9}"
+              inputmode="numeric"
+              maxlength="9"
+            />
+            <div class="invalid-feedback">El teléfono debe tener 9 dígitos.</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label for="correo" class="form-label">Correo</label>
+            <input
+              id="correo"
+              name="correo"
+              type="email"
+              class="form-control"
+              [class.is-invalid]="c.invalid && (c.touched || f.submitted)"
+              [(ngModel)]="form.correo"
+              #c="ngModel"
+              required
+              email
+            />
+            <div class="invalid-feedback">Ingrese un correo válido.</div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary">
+            {{ editandoId() === null ? 'Registrar cliente' : 'Guardar cambios' }}
+          </button>
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<div class="card">
+  <div class="card-body">
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-5">
+        <label for="buscar" class="form-label">Buscar cliente</label>
+        <input
+          id="buscar"
+          class="form-control"
+          placeholder="DNI o nombre"
+          [ngModel]="texto()"
+          (ngModelChange)="texto.set($event)"
+          name="buscar"
+        />
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover tabla-ordenes mb-0">
+        <thead>
+          <tr>
+            <th>DNI</th>
+            <th>Cliente</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Órdenes</th>
+            <th>Acceso</th>
+            @if (esRecepcion) {
+              <th>Acción</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of clientesFiltrados(); track c.id) {
+            <tr>
+              <td>{{ c.dni }}</td>
+              <td class="fw-semibold">{{ c.nombres }}</td>
+              <td>{{ c.telefono }}</td>
+              <td>{{ c.correo }}</td>
+              <td>{{ datos.cantidadOrdenesDeCliente(c.id) }}</td>
+              <td>
+                @if (datos.accesoDeCliente(c.id); as acceso) {
+                  <span class="badge rounded-pill text-bg-success">{{ acceso.usuario }}</span>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              @if (esRecepcion) {
+                <td class="text-nowrap">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary me-1"
+                    [attr.aria-label]="'Editar a ' + c.nombres"
+                    (click)="abrirEditar(c)"
+                  >
+                    <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    [attr.aria-label]="'Restablecer la clave de ' + c.nombres"
+                    (click)="pedirRestablecer(c)"
+                  >
+                    <i class="bi bi-key" aria-hidden="true"></i> Clave
+                  </button>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="esRecepcion ? 7 : 6" class="text-center text-muted py-4">
+                No hay clientes que coincidan con la búsqueda.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (porRestablecer(); as cliente) {
+  <app-confirmar-dialogo
+    titulo="Restablecer clave"
+    [mensaje]="'Se asignará una nueva clave temporal a ' + cliente.nombres + '. La clave anterior dejará de funcionar.'"
+    textoConfirmar="Restablecer"
+    (confirmado)="confirmarRestablecer()"
+    (cancelado)="porRestablecer.set(null)"
+  />
+}
