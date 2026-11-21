@@ -3,7 +3,7 @@ import {
   Cliente,
   Equipo,
   EstadoOrden,
-  Marca,
+  MESES_GARANTIA,
   MovimientoOrden,
   Orden,
   Rol,
@@ -12,9 +12,14 @@ import {
   Usuario,
 } from '../models/modelos';
 
-
+/**
+ * Data Service del prototipo.
+ * Guarda los datos de ejemplo en memoria con signals. En el Capítulo 6 estas
+ * operaciones se reemplazarán por peticiones HttpClient a la API REST.
+ */
 @Injectable({ providedIn: 'root' })
 export class DatosService {
+  /** Red de centros de servicio del caso de estudio (datos de ejemplo). */
   readonly sedes = signal<Sede[]>([
     { id: 1, nombre: 'Lima Centro', ciudad: 'Lima', telefono: '014000101', activa: true },
     { id: 2, nombre: 'Lima Norte', ciudad: 'Lima', telefono: '014000102', activa: true },
@@ -34,23 +39,12 @@ export class DatosService {
     { id: 10, nombre: 'Mónica Ruiz', usuario: 'tecnico4', clave: 'demo123', rol: 'TECNICO', activo: true, sedeId: 2, dni: '46321458', telefono: '911800900', correo: 'monica.ruiz@correo.com', especialidad: 'Televisores' },
   ]);
 
-  readonly marcas = signal<Marca[]>([
-    { id: 1, nombre: 'HP' },
-    { id: 2, nombre: 'Dell' },
-    { id: 3, nombre: 'Lenovo' },
-    { id: 4, nombre: 'Epson' },
-    { id: 5, nombre: 'Acer' },
-    { id: 6, nombre: 'Asus' },
-    { id: 7, nombre: 'Samsung' },
-    { id: 8, nombre: 'Canon' },
-  ]);
-
   readonly tiposEquipo = signal<TipoEquipo[]>([
-    { id: 1, nombre: 'Laptop' },
-    { id: 2, nombre: 'PC de escritorio' },
-    { id: 3, nombre: 'Impresora' },
-    { id: 4, nombre: 'Monitor' },
-    { id: 5, nombre: 'Otro' },
+    { id: 1, nombre: 'Celular' },
+    { id: 2, nombre: 'Tablet' },
+    { id: 3, nombre: 'Televisor' },
+    { id: 4, nombre: 'Laptop' },
+    { id: 5, nombre: 'Electrodoméstico' },
   ]);
 
   readonly clientes = signal<Cliente[]>([
@@ -60,75 +54,74 @@ export class DatosService {
   ]);
 
   readonly equipos = signal<Equipo[]>([
-    { id: 1, clienteId: 1, tipoId: 1, marcaId: 1, modelo: 'Pavilion 15', serie: '5CD1234ABC' },
-    { id: 2, clienteId: 2, tipoId: 2, marcaId: 3, modelo: 'ThinkCentre M70', serie: 'PC-77412' },
-    { id: 3, clienteId: 1, tipoId: 1, marcaId: 2, modelo: 'Inspiron 3501', serie: 'DL-8842' },
-    { id: 4, clienteId: 3, tipoId: 3, marcaId: 4, modelo: 'L3150', serie: 'EP-30551' },
-    { id: 5, clienteId: 2, tipoId: 1, marcaId: 3, modelo: 'IdeaPad 3', serie: 'LN-90217' },
+    { id: 1, clienteId: 1, tipoId: 1, modelo: 'Galaxy A54', serie: '356938035643809', fechaCompra: '2026-03-10' },
+    { id: 2, clienteId: 2, tipoId: 3, modelo: 'UN55CU7000', serie: 'TV-77412', fechaCompra: '2024-11-05' },
+    { id: 3, clienteId: 1, tipoId: 4, modelo: 'Galaxy Book3', serie: 'NB-8842', fechaCompra: '2025-02-14' },
+    { id: 4, clienteId: 3, tipoId: 5, modelo: 'Lavadora WA19', serie: 'LV-30551', fechaCompra: '2026-01-20' },
+    { id: 5, clienteId: 2, tipoId: 2, modelo: 'Galaxy Tab A9', serie: 'TB-90217', fechaCompra: '2025-06-02' },
   ]);
 
   readonly ordenes = signal<Orden[]>([
     {
-      id: 1, codigo: 'ST-0001', clienteId: 1, equipoId: 1, sedeId: 1, tecnicoId: 2,
-      falla: 'No enciende; a veces parpadea el LED de carga.',
+      id: 1, codigo: 'ST-0001', clienteId: 1, equipoId: 1, sedeId: 1, tecnicoId: 2, enGarantia: true,
+      falla: 'La batería se descarga muy rápido y el equipo se apaga solo.',
       accesorios: 'Cargador original',
       estado: 'EN_DIAGNOSTICO',
       historial: [
-        { fecha: '2026-10-26T09:10:00', estado: 'RECIBIDO', responsable: 'Marcela Torres', detalle: 'Equipo recibido con cargador original.' },
+        { fecha: '2026-10-26T09:10:00', estado: 'RECIBIDO', responsable: 'Marcela Torres', detalle: 'Equipo recibido con cargador original. Está en garantía.' },
         { fecha: '2026-10-26T11:30:00', estado: 'EN_DIAGNOSTICO', responsable: 'Marcela Torres', detalle: 'Asignada a Julio Quispe.' },
       ],
     },
     {
-      id: 2, codigo: 'ST-0002', clienteId: 2, equipoId: 2, sedeId: 2,
-      falla: 'Se reinicia solo al abrir programas pesados.',
-      accesorios: 'Cable de poder',
+      id: 2, codigo: 'ST-0002', clienteId: 2, equipoId: 2, sedeId: 2, enGarantia: false,
+      falla: 'La pantalla muestra líneas verticales y a veces no enciende.',
+      accesorios: 'Control remoto',
       estado: 'RECIBIDO',
       historial: [
-        { fecha: '2026-10-28T08:45:00', estado: 'RECIBIDO', responsable: 'Diego Alarcón', detalle: 'Equipo recibido con cable de poder.' },
+        { fecha: '2026-10-28T08:45:00', estado: 'RECIBIDO', responsable: 'Diego Alarcón', detalle: 'Equipo recibido con control remoto. Garantía vencida.' },
       ],
     },
     {
-      id: 3, codigo: 'ST-0003', clienteId: 1, equipoId: 3, sedeId: 1, tecnicoId: 3,
+      id: 3, codigo: 'ST-0003', clienteId: 1, equipoId: 3, sedeId: 1, tecnicoId: 3, enGarantia: false,
       falla: 'El sistema tarda mucho en iniciar y se congela.',
       accesorios: 'Cargador y mochila',
       estado: 'PRESUPUESTO_ENVIADO',
-      diagnostico: 'Disco duro con sectores dañados. Se recomienda cambiarlo por una unidad SSD y reinstalar el sistema.',
+      diagnostico: 'Unidad de almacenamiento con sectores dañados. Se recomienda cambiarla por una SSD y reinstalar el sistema.',
       montoPresupuesto: 280,
       historial: [
-        { fecha: '2026-10-24T10:00:00', estado: 'RECIBIDO', responsable: 'Marcela Torres', detalle: 'Equipo recibido con cargador y mochila.' },
+        { fecha: '2026-10-24T10:00:00', estado: 'RECIBIDO', responsable: 'Marcela Torres', detalle: 'Equipo recibido con cargador y mochila. Garantía vencida.' },
         { fecha: '2026-10-24T12:15:00', estado: 'EN_DIAGNOSTICO', responsable: 'Marcela Torres', detalle: 'Asignada a Carla Vera.' },
         { fecha: '2026-10-25T16:40:00', estado: 'PRESUPUESTO_ENVIADO', responsable: 'Carla Vera', detalle: 'Presupuesto de S/ 280.00 enviado al cliente.' },
       ],
     },
     {
-      id: 4, codigo: 'ST-0004', clienteId: 3, equipoId: 4, sedeId: 3, tecnicoId: 4,
-      falla: 'Imprime con manchas y aparece luz roja de error.',
-      accesorios: 'Cable USB',
+      id: 4, codigo: 'ST-0004', clienteId: 3, equipoId: 4, sedeId: 3, tecnicoId: 4, enGarantia: true,
+      falla: 'No desagua y muestra un código de error en el panel.',
+      accesorios: 'Manguera de desagüe',
       estado: 'EN_REPARACION',
-      diagnostico: 'Almohadillas de tinta saturadas. Requiere mantenimiento y reinicio del contador.',
-      montoPresupuesto: 90,
+      diagnostico: 'Bomba de desagüe obstruida y con desgaste. Se reemplaza la bomba (cubierto por garantía).',
+      montoPresupuesto: 0,
       decision: 'APROBADO',
-      actividad: 'Limpieza de cabezal y reemplazo de almohadillas.',
+      actividad: 'Cambio de la bomba de desagüe.',
       historial: [
-        { fecha: '2026-10-22T09:30:00', estado: 'RECIBIDO', responsable: 'Patricia Lozano', detalle: 'Equipo recibido con cable USB.' },
+        { fecha: '2026-10-22T09:30:00', estado: 'RECIBIDO', responsable: 'Patricia Lozano', detalle: 'Equipo recibido con manguera de desagüe. Está en garantía.' },
         { fecha: '2026-10-22T10:00:00', estado: 'EN_DIAGNOSTICO', responsable: 'Patricia Lozano', detalle: 'Asignada a Rolando Díaz.' },
-        { fecha: '2026-10-23T15:20:00', estado: 'PRESUPUESTO_ENVIADO', responsable: 'Rolando Díaz', detalle: 'Presupuesto de S/ 90.00 enviado al cliente.' },
-        { fecha: '2026-10-23T18:05:00', estado: 'EN_REPARACION', responsable: 'Pedro Salinas Cruz', detalle: 'El cliente aprobó el presupuesto.' },
+        { fecha: '2026-10-23T15:20:00', estado: 'EN_REPARACION', responsable: 'Rolando Díaz', detalle: 'Diagnóstico registrado. Cubierto por garantía: pasa directo a reparación.' },
       ],
     },
     {
-      id: 5, codigo: 'ST-0005', clienteId: 2, equipoId: 5, sedeId: 2, tecnicoId: 10,
-      falla: 'La pantalla se ve en negro, aunque el equipo enciende.',
-      accesorios: 'Cargador',
+      id: 5, codigo: 'ST-0005', clienteId: 2, equipoId: 5, sedeId: 2, tecnicoId: 10, enGarantia: false,
+      falla: 'La pantalla no responde al tacto.',
+      accesorios: 'Cargador y funda',
       estado: 'LISTO_PARA_ENTREGA',
-      diagnostico: 'Cable flex de pantalla suelto. Se reconectó y se aseguró.',
+      diagnostico: 'Conector del panel táctil suelto. Se reconectó y se calibró.',
       montoPresupuesto: 60,
       decision: 'APROBADO',
-      actividad: 'Reconexión y fijación del cable flex de pantalla.',
+      actividad: 'Reconexión y calibración del panel táctil.',
       repuestos: 'Ninguno',
-      pruebas: 'Encendido, pantalla y teclado sin fallas durante 30 minutos.',
+      pruebas: 'Táctil y pantalla sin fallas durante 30 minutos.',
       historial: [
-        { fecha: '2026-10-20T11:00:00', estado: 'RECIBIDO', responsable: 'Diego Alarcón', detalle: 'Equipo recibido con cargador.' },
+        { fecha: '2026-10-20T11:00:00', estado: 'RECIBIDO', responsable: 'Diego Alarcón', detalle: 'Equipo recibido con cargador y funda. Garantía vencida.' },
         { fecha: '2026-10-20T11:20:00', estado: 'EN_DIAGNOSTICO', responsable: 'Diego Alarcón', detalle: 'Asignada a Mónica Ruiz.' },
         { fecha: '2026-10-21T10:10:00', estado: 'PRESUPUESTO_ENVIADO', responsable: 'Mónica Ruiz', detalle: 'Presupuesto de S/ 60.00 enviado al cliente.' },
         { fecha: '2026-10-21T12:00:00', estado: 'EN_REPARACION', responsable: 'Ana Rojas Vega', detalle: 'El cliente aprobó el presupuesto.' },
@@ -180,14 +173,6 @@ export class DatosService {
     return this.ordenes().filter((o) => o.sedeId === id).length;
   }
 
-  nombreMarca(id: number): string {
-    return this.marcas().find((m) => m.id === id)?.nombre ?? '';
-  }
-
-  cantidadEquiposDeMarca(id: number): number {
-    return this.equipos().filter((e) => e.marcaId === id).length;
-  }
-
   nombreTipo(id: number): string {
     return this.tiposEquipo().find((t) => t.id === id)?.nombre ?? '';
   }
@@ -210,15 +195,24 @@ export class DatosService {
 
   descripcionEquipo(id: number): string {
     const e = this.equipo(id);
-    return e ? `${this.nombreTipo(e.tipoId)} ${this.nombreMarca(e.marcaId)} ${e.modelo}` : '';
+    return e ? `${this.nombreTipo(e.tipoId)} ${e.modelo}` : '';
   }
 
+  finGarantia(fechaCompra: string): Date {
+    const fin = new Date(fechaCompra + 'T00:00:00');
+    fin.setMonth(fin.getMonth() + MESES_GARANTIA);
+    return fin;
+  }
+
+  garantiaVigente(fechaCompra: string, hoy: Date = new Date()): boolean {
+    return hoy <= this.finGarantia(fechaCompra);
+  }
 
 
   registrarRecepcion(
     dni: string,
     nuevoCliente: { nombres: string; correo: string; telefono: string } | null,
-    equipo: { tipoId: number; marcaId: number; modelo: string; serie: string },
+    equipo: { tipoId: number; modelo: string; serie: string; fechaCompra: string },
     falla: string,
     accesorios: string,
     responsable: string,
@@ -239,7 +233,7 @@ export class DatosService {
     }
 
     let equipoReg = this.equipos().find(
-      (e) => e.clienteId === cliente!.id && equipo.serie !== '' && e.serie === equipo.serie,
+      (e) => e.clienteId === cliente!.id && e.serie === equipo.serie,
     );
     if (equipoReg) {
       const abierta = this.ordenes().some(
@@ -253,6 +247,7 @@ export class DatosService {
       this.equipos.update((lista) => [...lista, equipoReg!]);
     }
 
+    const enGarantia = this.garantiaVigente(equipoReg.fechaCompra);
     const numero = this.ordenes().length + 1;
     const orden: Orden = {
       id: numero,
@@ -260,17 +255,21 @@ export class DatosService {
       clienteId: cliente.id,
       equipoId: equipoReg.id,
       sedeId,
+      enGarantia,
       falla,
       accesorios,
       estado: 'RECIBIDO',
       historial: [
-        this.movimiento('RECIBIDO', responsable, `Equipo recibido. Accesorios: ${accesorios || 'ninguno'}.`),
+        this.movimiento(
+          'RECIBIDO',
+          responsable,
+          `Equipo recibido. Accesorios: ${accesorios || 'ninguno'}. ${enGarantia ? 'Está en garantía.' : 'Garantía vencida.'}`,
+        ),
       ],
     };
     this.ordenes.update((lista) => [orden, ...lista]);
     return { orden, accesoCliente };
   }
-
 
   crearCliente(datos: {
     dni: string;
@@ -391,28 +390,6 @@ export class DatosService {
   }
 
 
-  agregarMarca(nombre: string): { error?: string } {
-    const limpio = nombre.trim();
-    if (limpio.length < 2) {
-      return { error: 'El nombre de la marca debe tener al menos 2 caracteres.' };
-    }
-    if (this.marcas().some((m) => m.nombre.toLowerCase() === limpio.toLowerCase())) {
-      return { error: `La marca ${limpio} ya está registrada.` };
-    }
-    const id = Math.max(0, ...this.marcas().map((m) => m.id)) + 1;
-    this.marcas.update((lista) => [...lista, { id, nombre: limpio }]);
-    return {};
-  }
-
-  eliminarMarca(id: number): { error?: string } {
-    if (this.cantidadEquiposDeMarca(id) > 0) {
-      return { error: 'No se puede eliminar: hay equipos registrados con esa marca.' };
-    }
-    this.marcas.update((lista) => lista.filter((m) => m.id !== id));
-    return {};
-  }
-
-
   registrarPersonal(datos: {
     rol: Rol;
     sedeId?: number | null;
@@ -498,9 +475,20 @@ export class DatosService {
     });
   }
 
+
   enviarPresupuesto(ordenId: number, diagnostico: string, monto: number, responsable: string): void {
     this.actualizar(ordenId, (o) => {
       o.diagnostico = diagnostico;
+      if (o.enGarantia) {
+        o.montoPresupuesto = 0;
+        o.decision = 'APROBADO';
+        o.estado = 'EN_REPARACION';
+        o.historial = [
+          ...o.historial,
+          this.movimiento('EN_REPARACION', responsable, 'Diagnóstico registrado. Cubierto por garantía: pasa directo a reparación.'),
+        ];
+        return;
+      }
       o.montoPresupuesto = monto;
       o.estado = 'PRESUPUESTO_ENVIADO';
       o.historial = [

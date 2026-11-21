@@ -15,15 +15,17 @@ export class Recepcion {
   readonly datos = inject(DatosService);
   private auth = inject(AuthService);
   private router = inject(Router);
+  readonly miSedeId = this.auth.usuario()?.sedeId;
 
   dni = '';
   nuevoCliente = { nombres: '', correo: '', telefono: '' };
-  equipo: { tipoId: number | null; marcaId: number | null; modelo: string; serie: string } = {
+  equipo: { tipoId: number | null; modelo: string; serie: string; fechaCompra: string } = {
     tipoId: null,
-    marcaId: null,
     modelo: '',
     serie: '',
+    fechaCompra: '',
   };
+  readonly hoy = new Date().toISOString().slice(0, 10);
   falla = '';
   accesorios = '';
 
@@ -40,6 +42,22 @@ export class Recepcion {
     this.clienteEncontrado.set(this.datos.buscarClientePorDni(this.dni) ?? null);
     this.busquedaHecha.set(true);
     this.error.set('');
+  }
+
+  garantia(): { vigente: boolean; texto: string } | null {
+    if (!this.equipo.fechaCompra) {
+      return null;
+    }
+    const vigente = this.datos.garantiaVigente(this.equipo.fechaCompra);
+    const fin = this.datos.finGarantia(this.equipo.fechaCompra).toLocaleDateString('es-PE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    return {
+      vigente,
+      texto: vigente ? `En garantía hasta el ${fin}. La reparación no tendrá costo.` : `Garantía vencida el ${fin}. Se cobrará según presupuesto.`,
+    };
   }
 
   alCambiarDni(): void {
@@ -60,7 +78,12 @@ export class Recepcion {
     const resultado = this.datos.registrarRecepcion(
       this.dni,
       this.clienteEncontrado() ? null : this.nuevoCliente,
-      { tipoId: this.equipo.tipoId!, marcaId: this.equipo.marcaId!, modelo: this.equipo.modelo, serie: this.equipo.serie },
+      {
+        tipoId: this.equipo.tipoId!,
+        modelo: this.equipo.modelo,
+        serie: this.equipo.serie,
+        fechaCompra: this.equipo.fechaCompra,
+      },
       this.falla,
       this.accesorios,
       this.auth.usuario()!.nombre,
@@ -82,7 +105,7 @@ export class Recepcion {
   nuevaRecepcion(): void {
     this.dni = '';
     this.nuevoCliente = { nombres: '', correo: '', telefono: '' };
-    this.equipo = { tipoId: null, marcaId: null, modelo: '', serie: '' };
+    this.equipo = { tipoId: null, modelo: '', serie: '', fechaCompra: '' };
     this.falla = '';
     this.accesorios = '';
     this.clienteEncontrado.set(null);

@@ -1,3 +1,4 @@
+// Modelos de datos del prototipo TecnoFix.
 
 export type Rol = 'ADMIN' | 'RECEPCION' | 'TECNICO' | 'CLIENTE';
 
@@ -50,11 +51,6 @@ export interface Sede {
   activa: boolean;
 }
 
-export interface Marca {
-  id: number;
-  nombre: string;
-}
-
 export interface TipoEquipo {
   id: number;
   nombre: string;
@@ -72,10 +68,12 @@ export interface Equipo {
   id: number;
   clienteId: number;
   tipoId: number;
-  marcaId: number;
   modelo: string;
   serie: string;
+  fechaCompra: string;
 }
+
+export const MESES_GARANTIA = 12;
 
 export interface MovimientoOrden {
   fecha: string;
@@ -91,6 +89,7 @@ export interface Orden {
   equipoId: number;
   sedeId: number;
   tecnicoId?: number;
+  enGarantia: boolean;
   falla: string;
   accesorios: string;
   estado: EstadoOrden;

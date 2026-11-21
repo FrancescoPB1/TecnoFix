@@ -1,8 +1,9 @@
-<h1 class="h4 mb-3">Recepción de equipo</h1>
+<h1 class="h4 mb-1">Recepción de equipo</h1>
+<p class="text-muted mb-3">Sede {{ datos.nombreSede(miSedeId) }}</p>
 
 @if (codigoCreado()) {
   <div class="alert alert-success">
-    <p class="mb-2">Orden <strong>{{ codigoCreado() }}</strong> registrada correctamente. Quedó pendiente de asignación a un técnico.</p>
+    <p class="mb-2">Orden <strong>{{ codigoCreado() }}</strong> registrada correctamente en la sede {{ datos.nombreSede(miSedeId) }}. Quedó pendiente de asignación a un técnico.</p>
     @if (accesoCliente(); as acceso) {
       <p class="mb-2">
         Se creó el acceso del cliente para que consulte su orden. Entréguele estos datos:
@@ -126,25 +127,6 @@
             <div class="form-text">¿No aparece? Pida al administrador que lo registre.</div>
           </div>
           <div class="col-12 col-md-3">
-            <label for="marca" class="form-label">Marca</label>
-            <select
-              id="marca"
-              name="marca"
-              class="form-select"
-              [class.is-invalid]="ma.invalid && (ma.touched || f.submitted)"
-              [(ngModel)]="equipo.marcaId"
-              #ma="ngModel"
-              required
-            >
-              <option [ngValue]="null" disabled>Seleccione...</option>
-              @for (m of datos.marcas(); track m.id) {
-                <option [ngValue]="m.id">{{ m.nombre }}</option>
-              }
-            </select>
-            <div class="invalid-feedback">Seleccione la marca.</div>
-            <div class="form-text">¿No aparece? Pida al administrador que la registre.</div>
-          </div>
-          <div class="col-12 col-md-3">
             <label for="modelo" class="form-label">Modelo</label>
             <input
               id="modelo"
@@ -158,9 +140,42 @@
             <div class="invalid-feedback">Ingrese el modelo.</div>
           </div>
           <div class="col-12 col-md-3">
-            <label for="serie" class="form-label">Serie (opcional)</label>
-            <input id="serie" name="serie" class="form-control" [(ngModel)]="equipo.serie" />
+            <label for="serie" class="form-label">Serie o IMEI</label>
+            <input
+              id="serie"
+              name="serie"
+              class="form-control"
+              [class.is-invalid]="se.invalid && (se.touched || f.submitted)"
+              [(ngModel)]="equipo.serie"
+              #se="ngModel"
+              required
+              minlength="5"
+            />
+            <div class="invalid-feedback">Ingrese la serie o el IMEI (mínimo 5 caracteres).</div>
           </div>
+          <div class="col-12 col-md-3">
+            <label for="fechaCompra" class="form-label">Fecha de compra</label>
+            <input
+              id="fechaCompra"
+              name="fechaCompra"
+              type="date"
+              class="form-control"
+              [class.is-invalid]="fc.invalid && (fc.touched || f.submitted)"
+              [max]="hoy"
+              [(ngModel)]="equipo.fechaCompra"
+              #fc="ngModel"
+              required
+            />
+            <div class="invalid-feedback">Ingrese la fecha de compra (no puede ser futura).</div>
+          </div>
+          @if (garantia(); as g) {
+            <div class="col-12">
+              <div class="alert mb-0 py-2" [class.alert-success]="g.vigente" [class.alert-warning]="!g.vigente">
+                <i class="bi" [class.bi-shield-check]="g.vigente" [class.bi-shield-exclamation]="!g.vigente" aria-hidden="true"></i>
+                {{ g.texto }}
+              </div>
+            </div>
+          }
 
           <div class="col-12 col-md-6">
             <label for="falla" class="form-label">Falla reportada</label>

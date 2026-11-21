@@ -27,7 +27,6 @@ export class Layout {
           { texto: 'Sedes', ruta: '/admin/sedes', icono: 'bi-geo-alt' },
           { texto: 'Clientes', ruta: '/admin/clientes', icono: 'bi-person-lines-fill' },
           { texto: 'Usuarios', ruta: '/admin/usuarios', icono: 'bi-people' },
-          { texto: 'Marcas', ruta: '/admin/marcas', icono: 'bi-tags' },
           { texto: 'Tipos de equipo', ruta: '/admin/tipos', icono: 'bi-pc-display' },
         ];
       case 'RECEPCION':
