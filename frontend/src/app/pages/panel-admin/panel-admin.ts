@@ -19,24 +19,29 @@ export class PanelAdmin {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  // Solo recepción registra equipos y entregas; el administrador supervisa el panel.
   readonly esRecepcion = this.auth.usuario()?.rol === 'RECEPCION';
 
   readonly estados = Object.entries(ETIQUETA_ESTADO) as [EstadoOrden, string][];
 
   readonly texto = signal('');
   readonly mensaje = signal('');
-  // Técnico elegido en cada fila antes de asignar (clave: id de la orden).
   readonly seleccion = signal<Record<number, number>>({});
 
-  // El filtro por estado viaja en la URL: /admin?estado=RECIBIDO
   private params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   readonly estadoFiltro = computed(() => this.params().get('estado') ?? '');
+
+  readonly miSedeId = this.auth.usuario()?.sedeId;
+  readonly sedeFiltro = computed(() => (this.esRecepcion ? (this.miSedeId ?? 0) : Number(this.params().get('sede') ?? 0)));
+
+  private readonly ordenesDeLaSede = computed(() => {
+    const sede = this.sedeFiltro();
+    return this.datos.ordenes().filter((o) => !sede || o.sedeId === sede);
+  });
 
   readonly ordenesFiltradas = computed(() => {
     const estado = this.estadoFiltro();
     const busqueda = this.texto().trim().toLowerCase();
-    return this.datos.ordenes().filter((o) => {
+    return this.ordenesDeLaSede().filter((o) => {
       if (estado && o.estado !== estado) {
         return false;
       }
@@ -50,7 +55,7 @@ export class PanelAdmin {
   });
 
   readonly resumen = computed(() => {
-    const lista = this.datos.ordenes();
+    const lista = this.ordenesDeLaSede();
     const contar = (e: EstadoOrden) => lista.filter((o) => o.estado === e).length;
     return [
       { estado: 'RECIBIDO' as EstadoOrden, titulo: 'Sin asignar', cantidad: contar('RECIBIDO'), icono: 'bi-inbox', color: 'stat-gris' },
@@ -60,8 +65,26 @@ export class PanelAdmin {
     ];
   });
 
+  readonly resumenPorSede = computed(() =>
+    this.datos.sedes().map((s) => {
+      const lista = this.datos.ordenes().filter((o) => o.sedeId === s.id);
+      return {
+        sede: s,
+        total: lista.length,
+        sinAsignar: lista.filter((o) => o.estado === 'RECIBIDO').length,
+        enProceso: lista.filter((o) => ['EN_DIAGNOSTICO', 'PRESUPUESTO_ENVIADO', 'EN_REPARACION'].includes(o.estado)).length,
+        listas: lista.filter((o) => o.estado === 'LISTO_PARA_ENTREGA').length,
+        entregadas: lista.filter((o) => o.estado === 'ENTREGADO').length,
+      };
+    }),
+  );
+
   cambiarFiltro(estado: string): void {
     this.router.navigate([], { queryParams: { estado: estado || null }, queryParamsHandling: 'merge' });
+  }
+
+  cambiarSede(sede: string): void {
+    this.router.navigate([], { queryParams: { sede: sede || null }, queryParamsHandling: 'merge' });
   }
 
   elegirTecnico(ordenId: number, valor: string): void {

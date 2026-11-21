@@ -26,9 +26,14 @@ export class Entrega {
   readonly confirmando = signal(false);
   readonly entregado = signal(false);
 
-  // Solo se entregan equipos reparados o aquellos cuyo presupuesto fue rechazado.
+  readonly deOtraSede = computed(() => this.orden()?.sedeId !== this.auth.usuario()?.sedeId);
+
   readonly puedeEntregarse = computed(() => {
-    const estado = this.orden()?.estado;
+    const orden = this.orden();
+    const estado = orden?.estado;
+    if (this.deOtraSede()) {
+      return false;
+    }
     return estado === 'LISTO_PARA_ENTREGA' || estado === 'DEVUELTO_SIN_REPARAR';
   });
 

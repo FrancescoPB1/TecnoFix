@@ -8,6 +8,11 @@
     La orden <strong>{{ orden()!.codigo }}</strong> quedó registrada como entregada a {{ orden()!.receptor }}.
   </div>
   <a routerLink="/admin" class="btn btn-primary">Volver al panel</a>
+} @else if (deOtraSede()) {
+  <div class="alert alert-warning">
+    La orden {{ orden()!.codigo }} pertenece a la sede {{ datos.nombreSede(orden()!.sedeId) }}; solo esa sede puede entregarla.
+  </div>
+  <a routerLink="/admin" class="btn btn-outline-secondary">Volver al panel</a>
 } @else if (!puedeEntregarse()) {
   <div class="alert alert-info">La orden {{ orden()!.codigo }} todavía no está lista para entrega.</div>
   <a routerLink="/admin" class="btn btn-outline-secondary">Volver al panel</a>

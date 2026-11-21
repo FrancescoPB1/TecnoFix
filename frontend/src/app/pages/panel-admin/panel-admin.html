@@ -1,5 +1,10 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-  <h1 class="h4 mb-0">Panel de órdenes</h1>
+  <div>
+    <h1 class="h4 mb-0">Panel de órdenes</h1>
+    <p class="text-muted small mb-0">
+      {{ esRecepcion ? 'Sede ' + datos.nombreSede(miSedeId) : 'Administrador general: ' + datos.nombreSede(sedeFiltro() || undefined) }}
+    </p>
+  </div>
   @if (esRecepcion) {
     <a class="btn btn-primary" routerLink="/admin/recepcion">
       <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva orden
@@ -15,6 +20,7 @@
         [class.activo]="estadoFiltro() === r.estado"
         routerLink="/admin"
         [queryParams]="{ estado: r.estado }"
+        queryParamsHandling="merge"
       >
         <span [class]="'stat-icon ' + r.color"><i [class]="'bi ' + r.icono" aria-hidden="true"></i></span>
         <span>
@@ -28,13 +34,65 @@
 
 <app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
 
+@if (!esRecepcion) {
+  <div class="card mb-3">
+    <div class="card-header">Resumen por sede</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover tabla-ordenes mb-0">
+          <thead>
+            <tr>
+              <th>Sede</th>
+              <th>Órdenes</th>
+              <th>Sin asignar</th>
+              <th>En proceso</th>
+              <th>Listas para entrega</th>
+              <th>Entregadas</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of resumenPorSede(); track f.sede.id) {
+              <tr [class.table-active]="sedeFiltro() === f.sede.id">
+                <td class="fw-semibold">
+                  <a routerLink="/admin" [queryParams]="{ sede: f.sede.id }" queryParamsHandling="merge">{{ f.sede.nombre }}</a>
+                </td>
+                <td>{{ f.total }}</td>
+                <td>{{ f.sinAsignar }}</td>
+                <td>{{ f.enProceso }}</td>
+                <td>{{ f.listas }}</td>
+                <td>{{ f.entregadas }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+}
+
 <div class="card">
   <div class="card-body">
     <div class="row g-2 mb-3">
-      <div class="col-12 col-md-6">
+      <div class="col-12" [class.col-md-6]="esRecepcion" [class.col-md-4]="!esRecepcion">
         <label for="buscar" class="form-label small mb-1">Buscar orden o cliente</label>
         <input id="buscar" class="form-control" placeholder="Código, cliente o equipo" [(ngModel)]="texto" />
       </div>
+      @if (!esRecepcion) {
+        <div class="col-12 col-md-4">
+          <label for="filtro-sede" class="form-label small mb-1">Sede</label>
+          <select
+            id="filtro-sede"
+            class="form-select"
+            [ngModel]="sedeFiltro() || ''"
+            (ngModelChange)="cambiarSede($event)"
+          >
+            <option value="">Todas las sedes</option>
+            @for (s of datos.sedes(); track s.id) {
+              <option [value]="s.id">{{ s.nombre }}</option>
+            }
+          </select>
+        </div>
+      }
       <div class="col-12 col-md-4">
         <label for="filtro" class="form-label small mb-1">Estado</label>
         <select
@@ -56,6 +114,9 @@
         <thead>
           <tr>
             <th>Código</th>
+            @if (!esRecepcion) {
+              <th>Sede</th>
+            }
             <th>Cliente</th>
             <th>Equipo</th>
             <th>Estado</th>
@@ -67,6 +128,9 @@
           @for (o of ordenesFiltradas(); track o.id) {
             <tr>
               <td class="fw-semibold">{{ o.codigo }}</td>
+              @if (!esRecepcion) {
+                <td>{{ datos.nombreSede(o.sedeId) }}</td>
+              }
               <td>{{ datos.cliente(o.clienteId)?.nombres }}</td>
               <td>{{ datos.descripcionEquipo(o.equipoId) }}</td>
               <td><app-estado-badge [estado]="o.estado" /></td>
@@ -80,7 +144,7 @@
                       (change)="elegirTecnico(o.id, $any($event.target).value)"
                     >
                       <option value="">Técnico...</option>
-                      @for (t of datos.tecnicos(); track t.id) {
+                      @for (t of datos.tecnicos(o.sedeId); track t.id) {
                         <option [value]="t.id">{{ t.nombre }}</option>
                       }
                     </select>
@@ -97,7 +161,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="text-center text-muted py-4">No hay órdenes que coincidan con la búsqueda.</td>
+              <td [attr.colspan]="esRecepcion ? 6 : 7" class="text-center text-muted py-4">No hay órdenes que coincidan con la búsqueda.</td>
             </tr>
           }
         </tbody>
