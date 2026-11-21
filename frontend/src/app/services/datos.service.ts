@@ -7,25 +7,31 @@ import {
   MovimientoOrden,
   Orden,
   Rol,
+  Sede,
   TipoEquipo,
   Usuario,
 } from '../models/modelos';
 
-/**
- * Data Service del prototipo.
- * Guarda los datos de ejemplo en memoria con signals. En el Capítulo 6 estas
- * operaciones se reemplazarán por peticiones HttpClient a la API REST.
- */
+
 @Injectable({ providedIn: 'root' })
 export class DatosService {
+  readonly sedes = signal<Sede[]>([
+    { id: 1, nombre: 'Lima Centro', ciudad: 'Lima', telefono: '014000101', activa: true },
+    { id: 2, nombre: 'Lima Norte', ciudad: 'Lima', telefono: '014000102', activa: true },
+    { id: 3, nombre: 'Trujillo', ciudad: 'Trujillo', telefono: '044000103', activa: true },
+  ]);
+
   readonly usuarios = signal<Usuario[]>([
-    { id: 1, nombre: 'Marcela Torres', usuario: 'recepcion', clave: 'demo123', rol: 'RECEPCION', activo: true, dni: '40125478', telefono: '944100200', correo: 'marcela.torres@correo.com' },
-    { id: 2, nombre: 'Julio Quispe', usuario: 'tecnico1', clave: 'demo123', rol: 'TECNICO', activo: true, dni: '41236587', telefono: '955200300', correo: 'julio.quispe@correo.com', especialidad: 'Laptops' },
-    { id: 3, nombre: 'Carla Vera', usuario: 'tecnico2', clave: 'demo123', rol: 'TECNICO', activo: true, dni: '42587963', telefono: '966300400', correo: 'carla.vera@correo.com', especialidad: 'PC de escritorio' },
-    { id: 4, nombre: 'Rolando Díaz', usuario: 'tecnico3', clave: 'demo123', rol: 'TECNICO', activo: true, dni: '43698521', telefono: '977400500', correo: 'rolando.diaz@correo.com', especialidad: 'Impresoras y monitores' },
+    { id: 1, nombre: 'Marcela Torres', usuario: 'recepcion', clave: 'demo123', rol: 'RECEPCION', activo: true, sedeId: 1, dni: '40125478', telefono: '944100200', correo: 'marcela.torres@correo.com' },
+    { id: 2, nombre: 'Julio Quispe', usuario: 'tecnico1', clave: 'demo123', rol: 'TECNICO', activo: true, sedeId: 1, dni: '41236587', telefono: '955200300', correo: 'julio.quispe@correo.com', especialidad: 'Celulares y tablets' },
+    { id: 3, nombre: 'Carla Vera', usuario: 'tecnico2', clave: 'demo123', rol: 'TECNICO', activo: true, sedeId: 1, dni: '42587963', telefono: '966300400', correo: 'carla.vera@correo.com', especialidad: 'Laptops' },
+    { id: 4, nombre: 'Rolando Díaz', usuario: 'tecnico3', clave: 'demo123', rol: 'TECNICO', activo: true, sedeId: 3, dni: '43698521', telefono: '977400500', correo: 'rolando.diaz@correo.com', especialidad: 'Línea blanca' },
     { id: 5, nombre: 'Luis Paredes Rojas', usuario: 'cliente1', clave: 'demo123', rol: 'CLIENTE', activo: true, clienteId: 1 },
     { id: 6, nombre: 'Ana Rojas Vega', usuario: 'cliente2', clave: 'demo123', rol: 'CLIENTE', activo: true, clienteId: 2 },
     { id: 7, nombre: 'Ricardo Salazar', usuario: 'admin', clave: 'demo123', rol: 'ADMIN', activo: true, dni: '40789654', telefono: '988500600', correo: 'ricardo.salazar@correo.com' },
+    { id: 8, nombre: 'Diego Alarcón', usuario: 'recepcion2', clave: 'demo123', rol: 'RECEPCION', activo: true, sedeId: 2, dni: '44125896', telefono: '933600700', correo: 'diego.alarcon@correo.com' },
+    { id: 9, nombre: 'Patricia Lozano', usuario: 'recepcion3', clave: 'demo123', rol: 'RECEPCION', activo: true, sedeId: 3, dni: '45236987', telefono: '922700800', correo: 'patricia.lozano@correo.com' },
+    { id: 10, nombre: 'Mónica Ruiz', usuario: 'tecnico4', clave: 'demo123', rol: 'TECNICO', activo: true, sedeId: 2, dni: '46321458', telefono: '911800900', correo: 'monica.ruiz@correo.com', especialidad: 'Televisores' },
   ]);
 
   readonly marcas = signal<Marca[]>([
@@ -63,7 +69,7 @@ export class DatosService {
 
   readonly ordenes = signal<Orden[]>([
     {
-      id: 1, codigo: 'ST-0001', clienteId: 1, equipoId: 1, tecnicoId: 2,
+      id: 1, codigo: 'ST-0001', clienteId: 1, equipoId: 1, sedeId: 1, tecnicoId: 2,
       falla: 'No enciende; a veces parpadea el LED de carga.',
       accesorios: 'Cargador original',
       estado: 'EN_DIAGNOSTICO',
@@ -73,16 +79,16 @@ export class DatosService {
       ],
     },
     {
-      id: 2, codigo: 'ST-0002', clienteId: 2, equipoId: 2,
+      id: 2, codigo: 'ST-0002', clienteId: 2, equipoId: 2, sedeId: 2,
       falla: 'Se reinicia solo al abrir programas pesados.',
       accesorios: 'Cable de poder',
       estado: 'RECIBIDO',
       historial: [
-        { fecha: '2026-10-28T08:45:00', estado: 'RECIBIDO', responsable: 'Marcela Torres', detalle: 'Equipo recibido con cable de poder.' },
+        { fecha: '2026-10-28T08:45:00', estado: 'RECIBIDO', responsable: 'Diego Alarcón', detalle: 'Equipo recibido con cable de poder.' },
       ],
     },
     {
-      id: 3, codigo: 'ST-0003', clienteId: 1, equipoId: 3, tecnicoId: 3,
+      id: 3, codigo: 'ST-0003', clienteId: 1, equipoId: 3, sedeId: 1, tecnicoId: 3,
       falla: 'El sistema tarda mucho en iniciar y se congela.',
       accesorios: 'Cargador y mochila',
       estado: 'PRESUPUESTO_ENVIADO',
@@ -95,7 +101,7 @@ export class DatosService {
       ],
     },
     {
-      id: 4, codigo: 'ST-0004', clienteId: 3, equipoId: 4, tecnicoId: 2,
+      id: 4, codigo: 'ST-0004', clienteId: 3, equipoId: 4, sedeId: 3, tecnicoId: 4,
       falla: 'Imprime con manchas y aparece luz roja de error.',
       accesorios: 'Cable USB',
       estado: 'EN_REPARACION',
@@ -104,14 +110,14 @@ export class DatosService {
       decision: 'APROBADO',
       actividad: 'Limpieza de cabezal y reemplazo de almohadillas.',
       historial: [
-        { fecha: '2026-10-22T09:30:00', estado: 'RECIBIDO', responsable: 'Marcela Torres', detalle: 'Equipo recibido con cable USB.' },
-        { fecha: '2026-10-22T10:00:00', estado: 'EN_DIAGNOSTICO', responsable: 'Marcela Torres', detalle: 'Asignada a Julio Quispe.' },
-        { fecha: '2026-10-23T15:20:00', estado: 'PRESUPUESTO_ENVIADO', responsable: 'Julio Quispe', detalle: 'Presupuesto de S/ 90.00 enviado al cliente.' },
+        { fecha: '2026-10-22T09:30:00', estado: 'RECIBIDO', responsable: 'Patricia Lozano', detalle: 'Equipo recibido con cable USB.' },
+        { fecha: '2026-10-22T10:00:00', estado: 'EN_DIAGNOSTICO', responsable: 'Patricia Lozano', detalle: 'Asignada a Rolando Díaz.' },
+        { fecha: '2026-10-23T15:20:00', estado: 'PRESUPUESTO_ENVIADO', responsable: 'Rolando Díaz', detalle: 'Presupuesto de S/ 90.00 enviado al cliente.' },
         { fecha: '2026-10-23T18:05:00', estado: 'EN_REPARACION', responsable: 'Pedro Salinas Cruz', detalle: 'El cliente aprobó el presupuesto.' },
       ],
     },
     {
-      id: 5, codigo: 'ST-0005', clienteId: 2, equipoId: 5, tecnicoId: 4,
+      id: 5, codigo: 'ST-0005', clienteId: 2, equipoId: 5, sedeId: 2, tecnicoId: 10,
       falla: 'La pantalla se ve en negro, aunque el equipo enciende.',
       accesorios: 'Cargador',
       estado: 'LISTO_PARA_ENTREGA',
@@ -122,16 +128,15 @@ export class DatosService {
       repuestos: 'Ninguno',
       pruebas: 'Encendido, pantalla y teclado sin fallas durante 30 minutos.',
       historial: [
-        { fecha: '2026-10-20T11:00:00', estado: 'RECIBIDO', responsable: 'Marcela Torres', detalle: 'Equipo recibido con cargador.' },
-        { fecha: '2026-10-20T11:20:00', estado: 'EN_DIAGNOSTICO', responsable: 'Marcela Torres', detalle: 'Asignada a Rolando Díaz.' },
-        { fecha: '2026-10-21T10:10:00', estado: 'PRESUPUESTO_ENVIADO', responsable: 'Rolando Díaz', detalle: 'Presupuesto de S/ 60.00 enviado al cliente.' },
+        { fecha: '2026-10-20T11:00:00', estado: 'RECIBIDO', responsable: 'Diego Alarcón', detalle: 'Equipo recibido con cargador.' },
+        { fecha: '2026-10-20T11:20:00', estado: 'EN_DIAGNOSTICO', responsable: 'Diego Alarcón', detalle: 'Asignada a Mónica Ruiz.' },
+        { fecha: '2026-10-21T10:10:00', estado: 'PRESUPUESTO_ENVIADO', responsable: 'Mónica Ruiz', detalle: 'Presupuesto de S/ 60.00 enviado al cliente.' },
         { fecha: '2026-10-21T12:00:00', estado: 'EN_REPARACION', responsable: 'Ana Rojas Vega', detalle: 'El cliente aprobó el presupuesto.' },
-        { fecha: '2026-10-22T17:30:00', estado: 'LISTO_PARA_ENTREGA', responsable: 'Rolando Díaz', detalle: 'Reparación y pruebas completadas.' },
+        { fecha: '2026-10-22T17:30:00', estado: 'LISTO_PARA_ENTREGA', responsable: 'Mónica Ruiz', detalle: 'Reparación y pruebas completadas.' },
       ],
     },
   ]);
 
-  // ---------- Consultas ----------
 
   obtenerOrden(id: number): Orden | undefined {
     return this.ordenes().find((o) => o.id === id);
@@ -149,14 +154,30 @@ export class DatosService {
     return this.equipos().find((e) => e.id === id);
   }
 
-  /** Técnicos activos: son los que se pueden elegir al asignar una orden. */
-  tecnicos(): Usuario[] {
-    return this.usuarios().filter((u) => u.rol === 'TECNICO' && u.activo);
+  tecnicos(sedeId?: number): Usuario[] {
+    return this.usuarios().filter(
+      (u) => u.rol === 'TECNICO' && u.activo && (sedeId === undefined || u.sedeId === sedeId),
+    );
   }
 
-  /** Personal del taller (administradores, recepción y técnicos): se gestiona en la pantalla de usuarios. */
+  sede(id?: number): Sede | undefined {
+    return this.sedes().find((s) => s.id === id);
+  }
+
+  nombreSede(id?: number): string {
+    return this.sede(id)?.nombre ?? 'Todas las sedes';
+  }
+
   personal(): Usuario[] {
     return this.usuarios().filter((u) => u.rol !== 'CLIENTE');
+  }
+
+  cantidadPersonalDeSede(id: number): number {
+    return this.personal().filter((u) => u.sedeId === id).length;
+  }
+
+  cantidadOrdenesDeSede(id: number): number {
+    return this.ordenes().filter((o) => o.sedeId === id).length;
   }
 
   nombreMarca(id: number): string {
@@ -179,7 +200,6 @@ export class DatosService {
     return this.ordenes().filter((o) => o.clienteId === clienteId).length;
   }
 
-  /** Cuenta de acceso del cliente (se crea cuando recepción lo registra). */
   accesoDeCliente(clienteId: number): Usuario | undefined {
     return this.usuarios().find((u) => u.rol === 'CLIENTE' && u.clienteId === clienteId);
   }
@@ -193,12 +213,8 @@ export class DatosService {
     return e ? `${this.nombreTipo(e.tipoId)} ${this.nombreMarca(e.marcaId)} ${e.modelo}` : '';
   }
 
-  // ---------- Operaciones del flujo de atención ----------
 
-  /**
-   * Recepción: registra cliente (si es nuevo), equipo y orden. Si el cliente es nuevo también se
-   * crea su acceso (usuario = DNI y una clave temporal). Devuelve la orden o un mensaje de error.
-   */
+
   registrarRecepcion(
     dni: string,
     nuevoCliente: { nombres: string; correo: string; telefono: string } | null,
@@ -206,6 +222,7 @@ export class DatosService {
     falla: string,
     accesorios: string,
     responsable: string,
+    sedeId: number,
   ): { orden?: Orden; accesoCliente?: { usuario: string; clave: string }; error?: string } {
     let accesoCliente: { usuario: string; clave: string } | undefined;
     let cliente = this.buscarClientePorDni(dni);
@@ -221,7 +238,6 @@ export class DatosService {
       accesoCliente = creado.acceso;
     }
 
-    // Regla: no se permite otra orden abierta del mismo equipo.
     let equipoReg = this.equipos().find(
       (e) => e.clienteId === cliente!.id && equipo.serie !== '' && e.serie === equipo.serie,
     );
@@ -243,6 +259,7 @@ export class DatosService {
       codigo: 'ST-' + String(numero).padStart(4, '0'),
       clienteId: cliente.id,
       equipoId: equipoReg.id,
+      sedeId,
       falla,
       accesorios,
       estado: 'RECIBIDO',
@@ -254,12 +271,7 @@ export class DatosService {
     return { orden, accesoCliente };
   }
 
-  // ---------- Clientes ----------
 
-  /**
-   * Registra un cliente y crea su acceso (usuario = DNI y clave temporal). Lo usan la pantalla de
-   * clientes y la recepción de un equipo.
-   */
   crearCliente(datos: {
     dni: string;
     nombres: string;
@@ -281,7 +293,6 @@ export class DatosService {
     };
     this.clientes.update((lista) => [...lista, cliente]);
 
-    // Acceso del cliente: lo crea recepción al registrarlo, así solo entran quienes dejaron un equipo.
     const acceso = { usuario: datos.dni, clave: this.claveTemporalCliente(datos.dni) };
     this.usuarios.update((lista) => [
       ...lista,
@@ -298,7 +309,6 @@ export class DatosService {
     return { cliente, acceso };
   }
 
-  /** Recepción corrige los datos de contacto del cliente (el DNI no se modifica porque es su usuario). */
   actualizarCliente(id: number, datos: { nombres: string; correo: string; telefono: string }): void {
     const nombres = datos.nombres.trim();
     this.clientes.update((lista) =>
@@ -309,7 +319,6 @@ export class DatosService {
     );
   }
 
-  /** Vuelve a dejar la clave temporal del cliente (por ejemplo, si la olvidó). */
   restablecerClaveCliente(clienteId: number): { usuario: string; clave: string } | undefined {
     const acceso = this.accesoDeCliente(clienteId);
     const cliente = this.cliente(clienteId);
@@ -321,7 +330,44 @@ export class DatosService {
     return { usuario: acceso.usuario, clave };
   }
 
-  // ---------- Tipos de equipo (catálogo) ----------
+
+  cantidadOrdenesAbiertasDeSede(id: number): number {
+    return this.ordenes().filter((o) => o.sedeId === id && o.estado !== 'ENTREGADO').length;
+  }
+
+  agregarSede(datos: { nombre: string; ciudad: string; telefono: string }): { error?: string } {
+    const nombre = datos.nombre.trim();
+    if (this.sedes().some((s) => s.nombre.toLowerCase() === nombre.toLowerCase())) {
+      return { error: `Ya existe una sede llamada ${nombre}.` };
+    }
+    const id = Math.max(0, ...this.sedes().map((s) => s.id)) + 1;
+    this.sedes.update((lista) => [
+      ...lista,
+      { id, nombre, ciudad: datos.ciudad.trim(), telefono: datos.telefono, activa: true },
+    ]);
+    return {};
+  }
+
+  actualizarSede(id: number, datos: { nombre: string; ciudad: string; telefono: string }): { error?: string } {
+    const nombre = datos.nombre.trim();
+    if (this.sedes().some((s) => s.id !== id && s.nombre.toLowerCase() === nombre.toLowerCase())) {
+      return { error: `Ya existe una sede llamada ${nombre}.` };
+    }
+    this.sedes.update((lista) =>
+      lista.map((s) => (s.id === id ? { ...s, nombre, ciudad: datos.ciudad.trim(), telefono: datos.telefono } : s)),
+    );
+    return {};
+  }
+
+  cambiarEstadoSede(id: number): { error?: string } {
+    const sede = this.sede(id);
+    if (sede?.activa && this.cantidadOrdenesAbiertasDeSede(id) > 0) {
+      return { error: 'No se puede desactivar: la sede tiene órdenes sin entregar.' };
+    }
+    this.sedes.update((lista) => lista.map((s) => (s.id === id ? { ...s, activa: !s.activa } : s)));
+    return {};
+  }
+
 
   agregarTipoEquipo(nombre: string): { error?: string } {
     const limpio = nombre.trim();
@@ -344,7 +390,6 @@ export class DatosService {
     return {};
   }
 
-  // ---------- Marcas (catálogo) ----------
 
   agregarMarca(nombre: string): { error?: string } {
     const limpio = nombre.trim();
@@ -367,10 +412,10 @@ export class DatosService {
     return {};
   }
 
-  // ---------- Personal (administradores, recepción y técnicos) ----------
 
   registrarPersonal(datos: {
     rol: Rol;
+    sedeId?: number | null;
     nombre: string;
     dni: string;
     telefono: string;
@@ -393,6 +438,7 @@ export class DatosService {
       clave: datos.clave,
       rol: datos.rol,
       activo: true,
+      sedeId: datos.rol === 'ADMIN' ? undefined : (datos.sedeId ?? undefined),
       dni: datos.dni,
       telefono: datos.telefono,
       correo: datos.correo.trim(),
@@ -402,10 +448,10 @@ export class DatosService {
     return {};
   }
 
-  /** El administrador corrige los datos de una cuenta del personal; la clave solo cambia si se escribe una nueva. */
   actualizarPersonal(
     id: number,
     datos: {
+      sedeId?: number | null;
       nombre: string;
       dni: string;
       telefono: string;
@@ -423,6 +469,7 @@ export class DatosService {
           ? u
           : {
               ...u,
+              sedeId: u.rol === 'ADMIN' ? undefined : (datos.sedeId ?? undefined),
               nombre: datos.nombre.trim(),
               dni: datos.dni,
               telefono: datos.telefono,
@@ -435,12 +482,10 @@ export class DatosService {
     return {};
   }
 
-  /** Activa o desactiva una cuenta del personal (una cuenta inactiva no puede iniciar sesión). */
   cambiarEstadoUsuario(id: number): void {
     this.usuarios.update((lista) => lista.map((u) => (u.id === id ? { ...u, activo: !u.activo } : u)));
   }
 
-  // ---------- Flujo de la orden ----------
 
   asignarTecnico(ordenId: number, tecnicoId: number, responsable: string): void {
     this.actualizar(ordenId, (o) => {
@@ -517,7 +562,6 @@ export class DatosService {
     });
   }
 
-  // ---------- Auxiliares ----------
 
   private claveTemporalCliente(dni: string): string {
     return 'tf' + dni.slice(-4);

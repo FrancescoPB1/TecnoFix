@@ -31,7 +31,6 @@ export class Recepcion {
   readonly busquedaHecha = signal(false);
   readonly error = signal('');
   readonly codigoCreado = signal('');
-  // Acceso que se crea cuando el cliente es nuevo (recepción se lo entrega en el mostrador).
   readonly accesoCliente = signal<{ usuario: string; clave: string } | null>(null);
 
   buscarCliente(): void {
@@ -43,7 +42,6 @@ export class Recepcion {
     this.error.set('');
   }
 
-  // Si el DNI cambia, hay que volver a buscar al cliente.
   alCambiarDni(): void {
     this.busquedaHecha.set(false);
     this.clienteEncontrado.set(null);
@@ -66,6 +64,7 @@ export class Recepcion {
       this.falla,
       this.accesorios,
       this.auth.usuario()!.nombre,
+      this.auth.usuario()!.sedeId!,
     );
 
     if (resultado.error) {
@@ -80,7 +79,6 @@ export class Recepcion {
     this.router.navigate(['/admin']);
   }
 
-  // Limpia el formulario para registrar otro equipo sin salir de la pantalla.
   nuevaRecepcion(): void {
     this.dni = '';
     this.nuevoCliente = { nombres: '', correo: '', telefono: '' };

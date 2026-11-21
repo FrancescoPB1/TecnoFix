@@ -1,4 +1,3 @@
-// Modelos de datos del prototipo TecnoFix.
 
 export type Rol = 'ADMIN' | 'RECEPCION' | 'TECNICO' | 'CLIENTE';
 
@@ -36,11 +35,19 @@ export interface Usuario {
   rol: Rol;
   activo: boolean;
   clienteId?: number;
-  // Datos del personal (recepción y técnicos)
+  sedeId?: number;
   dni?: string;
   telefono?: string;
   correo?: string;
   especialidad?: string;
+}
+
+export interface Sede {
+  id: number;
+  nombre: string;
+  ciudad: string;
+  telefono: string;
+  activa: boolean;
 }
 
 export interface Marca {
@@ -82,6 +89,7 @@ export interface Orden {
   codigo: string;
   clienteId: number;
   equipoId: number;
+  sedeId: number;
   tecnicoId?: number;
   falla: string;
   accesorios: string;
