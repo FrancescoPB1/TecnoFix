@@ -132,7 +132,12 @@
                 <td>{{ datos.nombreSede(o.sedeId) }}</td>
               }
               <td>{{ datos.cliente(o.clienteId)?.nombres }}</td>
-              <td>{{ datos.descripcionEquipo(o.equipoId) }}</td>
+              <td>
+                {{ datos.descripcionEquipo(o.equipoId) }}
+                @if (o.enGarantia) {
+                  <span class="badge text-bg-info ms-1">Garantía</span>
+                }
+              </td>
               <td><app-estado-badge [estado]="o.estado" /></td>
               <td>{{ datos.nombreTecnico(o.tecnicoId) }}</td>
               <td>

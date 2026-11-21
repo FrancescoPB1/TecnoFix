@@ -2,11 +2,11 @@
   <section class="login-brand">
     <img src="logo.svg" alt="Logo de TecnoFix" />
     <h1>TecnoFix</h1>
-    <p class="lead mb-0">Gestión de órdenes de servicio técnico</p>
+    <p class="lead mb-0">Gestión de órdenes de servicio técnico para una red de sedes</p>
     <ul>
-      <li><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>Registro de cada equipo que ingresa al taller</li>
+      <li><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>Registro de cada equipo en la sede donde ingresa</li>
       <li><i class="bi bi-clipboard-check" aria-hidden="true"></i>Seguimiento del avance de cada reparación</li>
-      <li><i class="bi bi-receipt" aria-hidden="true"></i>Presupuestos aprobados por el cliente con constancia</li>
+      <li><i class="bi bi-receipt" aria-hidden="true"></i>Garantía verificada con la fecha de compra y presupuestos con constancia</li>
     </ul>
   </section>
 
@@ -15,7 +15,7 @@
       <div class="card">
         <div class="card-body p-4">
           <h2 class="h4 fw-bold mb-1">Iniciar sesión</h2>
-          <p class="text-muted mb-3">Ingrese con el usuario que le entregó el taller.</p>
+          <p class="text-muted mb-3">Ingrese con el usuario que le entregó la sede.</p>
 
           <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
 
@@ -73,4 +73,4 @@
       </div>
     </div>
   </section>
-</div>  
+</div>

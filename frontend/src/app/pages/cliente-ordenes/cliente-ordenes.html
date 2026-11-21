@@ -9,7 +9,12 @@
             <h2 class="h5 mb-0">{{ o.codigo }}</h2>
             <app-estado-badge [estado]="o.estado" />
           </div>
-          <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(o.equipoId) }}</p>
+          <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(o.equipoId) }}
+            @if (o.enGarantia) {
+              <span class="badge text-bg-info ms-1">Garantía</span>
+            }
+          </p>
+          <p class="mb-1"><strong>Sede:</strong> {{ datos.nombreSede(o.sedeId) }}</p>
           <p class="text-muted">{{ o.falla }}</p>
           @if (o.estado === 'PRESUPUESTO_ENVIADO') {
             <p class="text-warning-emphasis small mb-2">Tiene un presupuesto pendiente de respuesta.</p>

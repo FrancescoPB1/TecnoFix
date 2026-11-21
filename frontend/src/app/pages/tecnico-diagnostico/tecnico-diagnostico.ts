@@ -22,17 +22,17 @@ export class TecnicoDiagnostico {
   monto: number | null = null;
   readonly enviado = signal(false);
 
-  // El técnico solo puede diagnosticar órdenes que tiene asignadas y en estado de diagnóstico.
   readonly permitido = computed(() => {
     const o = this.orden();
     return !!o && o.tecnicoId === this.auth.usuario()?.id && o.estado === 'EN_DIAGNOSTICO';
   });
 
   enviar(formulario: NgForm): void {
-    if (formulario.invalid || this.monto === null) {
+    const enGarantia = this.orden()!.enGarantia;
+    if (formulario.invalid || (!enGarantia && this.monto === null)) {
       return;
     }
-    this.datos.enviarPresupuesto(this.id, this.diagnostico, this.monto, this.auth.usuario()!.nombre);
+    this.datos.enviarPresupuesto(this.id, this.diagnostico, enGarantia ? 0 : this.monto!, this.auth.usuario()!.nombre);
     this.enviado.set(true);
   }
 }

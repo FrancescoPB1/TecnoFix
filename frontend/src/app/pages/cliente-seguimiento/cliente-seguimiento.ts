@@ -32,11 +32,10 @@ export class ClienteSeguimiento {
   private route = inject(ActivatedRoute);
 
   private id = Number(this.route.snapshot.paramMap.get('id'));
-  readonly pasos = PASOS;
+  readonly pasos = computed(() => PASOS.map((p) => (p === 'Autorización' && this.orden()?.enGarantia ? 'Garantía' : p)));
 
   readonly orden = computed(() => {
     const o = this.datos.obtenerOrden(this.id);
-    // Un cliente solo puede ver sus propias órdenes.
     return o && o.clienteId === this.auth.usuario()?.clienteId ? o : undefined;
   });
 
@@ -45,7 +44,6 @@ export class ClienteSeguimiento {
     return o ? PASO_ACTUAL[o.estado] : 0;
   });
 
-  // Decisión que espera confirmación: true = aprobar, false = rechazar, null = ninguna.
   readonly pendiente = signal<boolean | null>(null);
   readonly mensaje = signal('');
 

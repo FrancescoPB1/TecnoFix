@@ -2,7 +2,11 @@
 
 @if (enviado()) {
   <div class="alert alert-success">
-    El presupuesto de la orden <strong>{{ orden()!.codigo }}</strong> se envió al cliente para su aprobación.
+    @if (orden()!.enGarantia) {
+      El diagnóstico de la orden <strong>{{ orden()!.codigo }}</strong> quedó registrado. Está cubierta por garantía y pasó directo a reparación.
+    } @else {
+      El presupuesto de la orden <strong>{{ orden()!.codigo }}</strong> se envió al cliente para su aprobación.
+    }
   </div>
   <a routerLink="/tecnico" class="btn btn-primary">Volver a mis órdenes</a>
 } @else if (!permitido()) {
@@ -15,7 +19,11 @@
         <h2 class="h5 mb-0">Orden {{ orden()!.codigo }}</h2>
         <app-estado-badge [estado]="orden()!.estado" />
       </div>
-      <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}</p>
+      <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}
+        @if (orden()!.enGarantia) {
+          <span class="badge text-bg-info ms-1">Garantía</span>
+        }
+      </p>
       <p class="mb-1"><strong>Falla reportada:</strong> {{ orden()!.falla }}</p>
       <p class="mb-0"><strong>Accesorios recibidos:</strong> {{ orden()!.accesorios || 'Ninguno' }}</p>
     </div>
@@ -39,6 +47,14 @@
           ></textarea>
           <div class="invalid-feedback">Describa el hallazgo y la intervención propuesta (mínimo 10 caracteres).</div>
         </div>
+        @if (orden()!.enGarantia) {
+          <div class="col-12">
+            <div class="alert alert-info mb-0">
+              <i class="bi bi-shield-check" aria-hidden="true"></i>
+              El equipo está en garantía: no se cobra al cliente y no necesita su aprobación. Al registrar el diagnóstico, la orden pasa directo a reparación.
+            </div>
+          </div>
+        } @else {
         <div class="col-12 col-md-4">
           <label for="monto" class="form-label">Costo propuesto (S/)</label>
           <input
@@ -55,11 +71,14 @@
           />
           <div class="invalid-feedback">Ingrese un monto mayor o igual a 0.</div>
         </div>
+        }
       </div>
     </div>
 
     <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary">Enviar presupuesto</button>
+      <button type="submit" class="btn btn-primary">
+        {{ orden()!.enGarantia ? 'Registrar diagnóstico' : 'Enviar presupuesto' }}
+      </button>
       <a routerLink="/tecnico" class="btn btn-outline-secondary">Cancelar</a>
     </div>
   </form>

@@ -17,7 +17,12 @@
           @for (o of ordenes(); track o.id) {
             <tr>
               <td class="fw-semibold">{{ o.codigo }}</td>
-              <td>{{ datos.descripcionEquipo(o.equipoId) }}</td>
+              <td>
+                {{ datos.descripcionEquipo(o.equipoId) }}
+                @if (o.enGarantia) {
+                  <span class="badge text-bg-info ms-1">Garantía</span>
+                }
+              </td>
               <td>{{ o.falla }}</td>
               <td><app-estado-badge [estado]="o.estado" /></td>
               <td>
