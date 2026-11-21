@@ -1,7 +1,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
   <div>
     <h1 class="h4 mb-1">Usuarios del personal</h1>
-    <p class="text-muted mb-0">Cuentas de administradores, recepción y técnicos del taller.</p>
+    <p class="text-muted mb-0">Cuentas del personal de la red: administradores, recepción y técnicos de cada sede.</p>
   </div>
   @if (!mostrarFormulario()) {
     <button type="button" class="btn btn-primary" (click)="abrirFormulario()">
@@ -28,7 +28,27 @@
               <option value="ADMIN">Administrador</option>
             </select>
           </div>
-          <div class="col-12 col-md-5">
+          @if (nuevo.rol !== 'ADMIN') {
+            <div class="col-12 col-md-3">
+              <label for="sede" class="form-label">Sede</label>
+              <select
+                id="sede"
+                name="sede"
+                class="form-select"
+                [class.is-invalid]="se.invalid && (se.touched || f.submitted)"
+                [(ngModel)]="nuevo.sedeId"
+                #se="ngModel"
+                required
+              >
+                <option [ngValue]="null" disabled>Seleccione...</option>
+                @for (s of sedesDisponibles(); track s.id) {
+                  <option [ngValue]="s.id">{{ s.nombre }}</option>
+                }
+              </select>
+              <div class="invalid-feedback">Seleccione la sede donde trabaja.</div>
+            </div>
+          }
+          <div class="col-12 col-md-4">
             <label for="nombre" class="form-label">Nombres y apellidos</label>
             <input
               id="nombre"
@@ -42,7 +62,7 @@
             />
             <div class="invalid-feedback">Ingrese los nombres y apellidos completos.</div>
           </div>
-          <div class="col-12 col-md-4">
+          <div class="col-12 col-md-2">
             <label for="dni" class="form-label">DNI</label>
             <input
               id="dni"
@@ -161,6 +181,7 @@
           <tr>
             <th>Nombre</th>
             <th>Rol</th>
+            <th>Sede</th>
             <th>Usuario</th>
             <th>DNI</th>
             <th>Especialidad</th>
@@ -173,6 +194,7 @@
             <tr>
               <td class="fw-semibold">{{ p.nombre }}</td>
               <td>{{ etiquetaRol[p.rol] }}</td>
+              <td>{{ p.sedeId ? datos.nombreSede(p.sedeId) : 'Todas (general)' }}</td>
               <td>{{ p.usuario }}</td>
               <td>{{ p.dni }}</td>
               <td>{{ p.especialidad || '—' }}</td>
@@ -205,7 +227,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="7" class="text-center text-muted py-4">Todavía no hay personal registrado.</td>
+              <td colspan="8" class="text-center text-muted py-4">Todavía no hay personal registrado.</td>
             </tr>
           }
         </tbody>

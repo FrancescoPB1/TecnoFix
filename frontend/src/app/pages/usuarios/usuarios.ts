@@ -2,10 +2,9 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { DatosService } from '../../services/datos.service';
 import { AuthService } from '../../services/auth.service';
-import { ETIQUETA_ROL, Rol, Usuario } from '../../models/modelos';
+import { ETIQUETA_ROL, Rol, Sede, Usuario } from '../../models/modelos';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
 
-/** Gestión del personal: el administrador crea y corrige las cuentas de administradores, recepción y técnicos. */
 @Component({
   selector: 'app-usuarios',
   imports: [FormsModule, MensajeFeedback],
@@ -18,7 +17,6 @@ export class Usuarios {
   readonly etiquetaRol = ETIQUETA_ROL;
 
   readonly mostrarFormulario = signal(false);
-  // Id de la cuenta que se está editando (null cuando se crea una nueva).
   readonly editandoId = signal<number | null>(null);
   readonly mensaje = signal('');
   readonly error = signal('');
@@ -28,6 +26,7 @@ export class Usuarios {
   private vacio() {
     return {
       rol: 'TECNICO' as Rol,
+      sedeId: null as number | null,
       nombre: '',
       dni: '',
       telefono: '',
@@ -52,6 +51,7 @@ export class Usuarios {
     this.editandoId.set(persona.id);
     this.nuevo = {
       rol: persona.rol,
+      sedeId: persona.sedeId ?? null,
       nombre: persona.nombre,
       dni: persona.dni ?? '',
       telefono: persona.telefono ?? '',
@@ -61,6 +61,10 @@ export class Usuarios {
       clave: '',
     };
     this.mostrarFormulario.set(true);
+  }
+
+  sedesDisponibles(): Sede[] {
+    return this.datos.sedes().filter((s) => s.activa || s.id === this.nuevo.sedeId);
   }
 
   cancelar(): void {
