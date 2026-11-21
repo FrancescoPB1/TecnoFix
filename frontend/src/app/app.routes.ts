@@ -9,6 +9,7 @@ import { Marcas } from './pages/marcas/marcas';
 import { Usuarios } from './pages/usuarios/usuarios';
 import { Clientes } from './pages/clientes/clientes';
 import { TiposEquipo } from './pages/tipos-equipo/tipos-equipo';
+import { Sedes } from './pages/sedes/sedes';
 import { TecnicoOrdenes } from './pages/tecnico-ordenes/tecnico-ordenes';
 import { TecnicoDiagnostico } from './pages/tecnico-diagnostico/tecnico-diagnostico';
 import { TecnicoReparacion } from './pages/tecnico-reparacion/tecnico-reparacion';
@@ -19,7 +20,7 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: 'login', component: Login },
   {
-    // Todas las pantallas internas comparten el Layout y exigen sesión iniciada.
+   
     path: '',
     component: Layout,
     canActivate: [autenticado],
@@ -33,6 +34,7 @@ export const routes: Routes = [
       { path: 'admin/clientes', component: Clientes, canActivate: [conRol], data: { roles: ['ADMIN', 'RECEPCION'] } },
       // Solo el administrador gestiona usuarios y catálogos (marcas y tipos de equipo)
       { path: 'admin/usuarios', component: Usuarios, canActivate: [conRol], data: { roles: ['ADMIN'] } },
+      { path: 'admin/sedes', component: Sedes, canActivate: [conRol], data: { roles: ['ADMIN'] } },
       { path: 'admin/marcas', component: Marcas, canActivate: [conRol], data: { roles: ['ADMIN'] } },
       { path: 'admin/tipos', component: TiposEquipo, canActivate: [conRol], data: { roles: ['ADMIN'] } },
       // Técnico

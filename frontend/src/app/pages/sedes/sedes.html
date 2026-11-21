@@ -1,0 +1,113 @@
+<h1 class="h4 mb-1">Sedes de servicio</h1>
+<p class="text-muted mb-3">Centros de servicio técnico de la red. Cada sede tiene su propio personal y atiende sus propias órdenes.</p>
+
+<app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
+<app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
+<div class="card mb-3">
+  <div class="card-header">{{ editandoId() === null ? 'Nueva sede' : 'Editar sede' }}</div>
+  <div class="card-body">
+    <form #f="ngForm" (ngSubmit)="guardar(f)" novalidate>
+      <div class="row g-3 align-items-start">
+        <div class="col-12 col-md-4">
+          <label for="nombre" class="form-label">Nombre de la sede</label>
+          <input
+            id="nombre"
+            name="nombre"
+            class="form-control"
+            [class.is-invalid]="n.invalid && (n.touched || f.submitted)"
+            [(ngModel)]="sede.nombre"
+            #n="ngModel"
+            required
+            minlength="3"
+            maxlength="40"
+          />
+          <div class="invalid-feedback">Ingrese el nombre (mínimo 3 caracteres).</div>
+        </div>
+        <div class="col-12 col-md-3">
+          <label for="ciudad" class="form-label">Ciudad</label>
+          <input
+            id="ciudad"
+            name="ciudad"
+            class="form-control"
+            [class.is-invalid]="c.invalid && (c.touched || f.submitted)"
+            [(ngModel)]="sede.ciudad"
+            #c="ngModel"
+            required
+            minlength="3"
+          />
+          <div class="invalid-feedback">Ingrese la ciudad.</div>
+        </div>
+        <div class="col-12 col-md-3">
+          <label for="telefono" class="form-label">Teléfono de la sede</label>
+          <input
+            id="telefono"
+            name="telefono"
+            class="form-control"
+            [class.is-invalid]="t.invalid && (t.touched || f.submitted)"
+            [(ngModel)]="sede.telefono"
+            #t="ngModel"
+            required
+            pattern="[0-9]{7,9}"
+            inputmode="numeric"
+            maxlength="9"
+          />
+          <div class="invalid-feedback">Ingrese de 7 a 9 dígitos.</div>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2 align-self-md-end">
+          <button type="submit" class="btn btn-primary">
+            {{ editandoId() === null ? 'Registrar sede' : 'Guardar cambios' }}
+          </button>
+          @if (editandoId() !== null) {
+            <button type="button" class="btn btn-outline-secondary" (click)="cancelar(f)">Cancelar</button>
+          }
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+  <div class="card">
+    <div class="card-header">Sedes registradas ({{ datos.sedes().length }})</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover tabla-ordenes mb-0">
+          <thead>
+            <tr>
+              <th>Sede</th>
+              <th>Ciudad</th>
+              <th>Teléfono</th>
+              <th>Personal</th>
+              <th>Órdenes</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of datos.sedes(); track s.id) {
+              <tr>
+                <td class="fw-semibold">{{ s.nombre }}</td>
+                <td>{{ s.ciudad }}</td>
+                <td>{{ s.telefono }}</td>
+                <td>{{ datos.cantidadPersonalDeSede(s.id) }}</td>
+                <td>{{ datos.cantidadOrdenesDeSede(s.id) }}</td>
+                <td>
+                  <span class="badge" [class.text-bg-success]="s.activa" [class.text-bg-secondary]="!s.activa">
+                    {{ s.activa ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td class="text-nowrap">
+                  <button type="button" class="btn btn-sm btn-outline-primary me-1" [attr.aria-label]="'Editar la sede ' + s.nombre" (click)="editar(s)">
+                    Editar
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" [attr.aria-label]="(s.activa ? 'Desactivar' : 'Activar') + ' la sede ' + s.nombre" (click)="cambiarEstado(s)">
+                    {{ s.activa ? 'Desactivar' : 'Activar' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>

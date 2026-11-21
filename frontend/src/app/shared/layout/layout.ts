@@ -9,7 +9,6 @@ interface OpcionMenu {
   icono: string;
 }
 
-/** Estructura común de la aplicación: menú lateral según el rol y zona de contenido. */
 @Component({
   selector: 'app-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
@@ -25,6 +24,7 @@ export class Layout {
       case 'ADMIN':
         return [
           { texto: 'Panel de órdenes', ruta: '/admin', icono: 'bi-speedometer2' },
+          { texto: 'Sedes', ruta: '/admin/sedes', icono: 'bi-geo-alt' },
           { texto: 'Clientes', ruta: '/admin/clientes', icono: 'bi-person-lines-fill' },
           { texto: 'Usuarios', ruta: '/admin/usuarios', icono: 'bi-people' },
           { texto: 'Marcas', ruta: '/admin/marcas', icono: 'bi-tags' },
