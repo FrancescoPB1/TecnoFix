@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { ETIQUETA_ESTADO, EstadoOrden, Orden } from '../../models/modelos';
 import { EstadoBadge } from '../../shared/estado-badge/estado-badge';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
-
+import { mensajeDeError } from '../../utils/errores';
 @Component({
   selector: 'app-panel-admin',
   imports: [FormsModule, RouterLink, EstadoBadge, MensajeFeedback],
@@ -25,6 +25,7 @@ export class PanelAdmin {
 
   readonly texto = signal('');
   readonly mensaje = signal('');
+  readonly error = signal('');
   readonly seleccion = signal<Record<number, number>>({});
 
   private params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
@@ -92,13 +93,17 @@ export class PanelAdmin {
   }
 
   asignar(orden: Orden): void {
+    this.mensaje.set('');
+    this.error.set('');
     const tecnicoId = this.seleccion()[orden.id];
     if (!tecnicoId) {
-      this.mensaje.set('Elija un técnico antes de asignar la orden ' + orden.codigo + '.');
+      this.error.set('Elija un técnico antes de asignar la orden ' + orden.codigo + '.');
       return;
     }
-    this.datos.asignarTecnico(orden.id, tecnicoId, this.auth.usuario()!.nombre);
-    this.mensaje.set(`Orden ${orden.codigo} asignada a ${this.datos.nombreTecnico(tecnicoId)}.`);
+    this.datos.asignarTecnico(orden.id, tecnicoId).subscribe({
+      next: (actualizada) => this.mensaje.set(`Orden ${actualizada.codigo} asignada a ${actualizada.tecnicoNombre}.`),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 
   puedeEntregarse(orden: Orden): boolean {

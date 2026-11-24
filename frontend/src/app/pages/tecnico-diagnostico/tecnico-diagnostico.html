@@ -29,8 +29,9 @@
     </div>
   </div>
 
-  <form #f="ngForm" (ngSubmit)="enviar(f)" novalidate>
-    <div class="card mb-3">
+  <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
+  <form #f="ngForm" (ngSubmit)="enviar(f)" novalidate>    <div class="card mb-3">
       <div class="card-body row g-3">
         <div class="col-12">
           <label for="diagnostico" class="form-label">Diagnóstico</label>

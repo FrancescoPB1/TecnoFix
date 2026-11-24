@@ -35,8 +35,9 @@
     </div>
   </div>
 
-  <form #f="ngForm" (ngSubmit)="pedirConfirmacion(f)" novalidate>
-    <div class="card mb-3">
+  <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
+  <form #f="ngForm" (ngSubmit)="pedirConfirmacion(f)" novalidate>    <div class="card mb-3">
       <div class="card-body row g-3">
         <div class="col-12 col-md-6">
           <label for="receptor" class="form-label">Receptor (quien recoge el equipo)</label>

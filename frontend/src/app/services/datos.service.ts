@@ -2,26 +2,21 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import {
-  Cliente,
-  Equipo,
-  EstadoOrden,
-  MESES_GARANTIA,
-  MovimientoOrden,
-  Orden,
-  Rol,
-  Sede,
-  TipoEquipo,
-  Usuario,
-} from '../models/modelos';
+import { Cliente, Equipo, MESES_GARANTIA, Orden, Rol, Sede, TipoEquipo, Usuario } from '../models/modelos';
 import { mensajeDeError } from '../utils/errores';
 
+/** Usuario y clave temporal de un cliente (la API solo los entrega al crear o restablecer el acceso). */
 export interface AccesoCliente {
   usuario: string;
   clave: string;
 }
 
-
+/**
+ * Data Service de TecnoFix.
+ * Guarda en signals los datos que llegan de la API REST y expone las operaciones del sistema:
+ * cada operación que modifica datos hace la petición HTTP y, si la API responde bien, actualiza
+ * los signals con lo que devolvió el servidor. Así las pantallas se actualizan solas.
+ */
 @Injectable({ providedIn: 'root' })
 export class DatosService {
   private http = inject(HttpClient);
@@ -31,13 +26,21 @@ export class DatosService {
   readonly usuarios = signal<Usuario[]>([]);
   readonly clientes = signal<Cliente[]>([]);
   readonly tiposEquipo = signal<TipoEquipo[]>([]);
+  // Los equipos llegan dentro de cada orden (orden.equipo).
   readonly equipos = signal<Equipo[]>([]);
   readonly ordenes = signal<Orden[]>([]);
 
+  // Estado de la carga inicial: se carga una vez por sesión, antes de mostrar las pantallas.
   readonly cargado = signal(false);
   readonly errorCarga = signal('');
 
+  // ---------- Carga inicial ----------
 
+  /**
+   * Descarga de la API lo que el rol necesita. La API ya filtra las órdenes según el rol
+   * (el cliente solo recibe las suyas, el técnico las asignadas, recepción las de su sede).
+   * Devuelve true para dejar pasar a la pantalla; false solo si la sesión ya no es válida.
+   */
   cargarInicial(rol: Rol): Observable<boolean> {
     if (this.cargado()) {
       return of(true);
@@ -48,6 +51,7 @@ export class DatosService {
       tipos: this.http.get<TipoEquipo[]>(`${this.api}/tipos-equipo`),
       ordenes: this.http.get<Orden[]>(`${this.api}/ordenes`),
       clientes: esPersonal ? this.http.get<Cliente[]>(`${this.api}/clientes`) : of([] as Cliente[]),
+      // El administrador ve todo el personal; recepción solo necesita los técnicos de su sede.
       personal:
         rol === 'ADMIN'
           ? this.http.get<Usuario[]>(`${this.api}/usuarios`)
@@ -68,11 +72,13 @@ export class DatosService {
       map(() => true),
       catchError((error) => {
         this.errorCarga.set(mensajeDeError(error));
+        // Con 401 el interceptor ya cerró la sesión: no se debe entrar a la pantalla.
         return of(error?.status !== 401);
       }),
     );
   }
 
+  /** Borra los datos en memoria (al cerrar sesión, para que el siguiente usuario no vea los anteriores). */
   vaciar(): void {
     this.sedes.set([]);
     this.usuarios.set([]);
@@ -84,6 +90,7 @@ export class DatosService {
     this.cargado.set(false);
   }
 
+  // ---------- Consultas ----------
 
   obtenerOrden(id: number): Orden | undefined {
     return this.ordenes().find((o) => o.id === id);
@@ -97,6 +104,7 @@ export class DatosService {
     return this.equipos().find((e) => e.id === id);
   }
 
+  /** Técnicos activos (de una sede si se indica): son los que se pueden elegir al asignar una orden. */
   tecnicos(sedeId?: number): Usuario[] {
     return this.usuarios().filter(
       (u) => u.rol === 'TECNICO' && u.activo && (sedeId === undefined || u.sedeId === sedeId),
@@ -111,6 +119,7 @@ export class DatosService {
     return this.sede(id)?.nombre ?? 'Todas las sedes';
   }
 
+  /** Personal de la red (administradores, recepción y técnicos): se gestiona en la pantalla de usuarios. */
   personal(): Usuario[] {
     return this.usuarios().filter((u) => u.rol !== 'CLIENTE');
   }
@@ -135,19 +144,12 @@ export class DatosService {
     return this.ordenes().filter((o) => o.clienteId === clienteId).length;
   }
 
-  accesoDeCliente(clienteId: number): Usuario | undefined {
-    return this.usuarios().find((u) => u.rol === 'CLIENTE' && u.clienteId === clienteId);
-  }
-
-  nombreTecnico(id?: number): string {
-    return this.usuarios().find((u) => u.id === id)?.nombre ?? 'Sin asignar';
-  }
-
   descripcionEquipo(id: number): string {
     const e = this.equipo(id);
     return e ? `${this.nombreTipo(e.tipoId)} ${e.modelo}` : '';
   }
 
+  /** Fecha en que termina la garantía (la fecha de compra más los meses de garantía). */
   finGarantia(fechaCompra: string): Date {
     const fin = new Date(fechaCompra + 'T00:00:00');
     fin.setMonth(fin.getMonth() + MESES_GARANTIA);
@@ -158,7 +160,7 @@ export class DatosService {
     return hoy <= this.finGarantia(fechaCompra);
   }
 
- 
+  
   registrarRecepcion(datos: {
     dni: string;
     nombres?: string;
@@ -204,6 +206,7 @@ export class DatosService {
       .pipe(tap((respuesta) => this.clientes.update((lista) => [...lista, respuesta.cliente])));
   }
 
+  /** Recepción corrige los datos de contacto del cliente (el DNI no se modifica porque es su usuario). */
   actualizarCliente(id: number, datos: { nombres: string; correo: string; telefono: string }): Observable<Cliente> {
     return this.http
       .put<Cliente>(`${this.api}/clientes/${id}`, datos)
@@ -287,70 +290,35 @@ export class DatosService {
   }
 
 
-  asignarTecnico(ordenId: number, tecnicoId: number, responsable: string): void {
-    this.actualizar(ordenId, (o) => {
-      o.tecnicoId = tecnicoId;
-      o.estado = 'EN_DIAGNOSTICO';
-      o.historial = [
-        ...o.historial,
-        this.movimiento('EN_DIAGNOSTICO', responsable, `Asignada a ${this.nombreTecnico(tecnicoId)}.`),
-      ];
-    });
+  asignarTecnico(ordenId: number, tecnicoId: number): Observable<Orden> {
+    return this.http
+      .patch<Orden>(`${this.api}/ordenes/${ordenId}/asignacion`, { tecnicoId })
+      .pipe(tap((orden) => this.guardarOrden(orden)));
   }
 
-  enviarPresupuesto(ordenId: number, diagnostico: string, monto: number, responsable: string): void {
-    this.actualizar(ordenId, (o) => {
-      o.diagnostico = diagnostico;
-      if (o.enGarantia) {
-        o.montoPresupuesto = 0;
-        o.decision = 'APROBADO';
-        o.estado = 'EN_REPARACION';
-        o.historial = [
-          ...o.historial,
-          this.movimiento('EN_REPARACION', responsable, 'Diagnóstico registrado. Cubierto por garantía: pasa directo a reparación.'),
-        ];
-        return;
-      }
-      o.montoPresupuesto = monto;
-      o.estado = 'PRESUPUESTO_ENVIADO';
-      o.historial = [
-        ...o.historial,
-        this.movimiento('PRESUPUESTO_ENVIADO', responsable, `Presupuesto de S/ ${monto.toFixed(2)} enviado al cliente.`),
-      ];
-    });
+ 
+  enviarPresupuesto(ordenId: number, diagnostico: string, monto: number): Observable<Orden> {
+    return this.http
+      .patch<Orden>(`${this.api}/ordenes/${ordenId}/diagnostico`, { diagnostico, monto })
+      .pipe(tap((orden) => this.guardarOrden(orden)));
   }
 
-  decidirPresupuesto(ordenId: number, aprobado: boolean, responsable: string): void {
-    this.actualizar(ordenId, (o) => {
-      o.decision = aprobado ? 'APROBADO' : 'RECHAZADO';
-      o.estado = aprobado ? 'EN_REPARACION' : 'DEVUELTO_SIN_REPARAR';
-      o.historial = [
-        ...o.historial,
-        this.movimiento(
-          o.estado,
-          responsable,
-          aprobado ? 'El cliente aprobó el presupuesto.' : 'El cliente rechazó el presupuesto.',
-        ),
-      ];
-    });
+  decidirPresupuesto(ordenId: number, aprobado: boolean): Observable<Orden> {
+    return this.http
+      .patch<Orden>(`${this.api}/ordenes/${ordenId}/decision`, { aprobado })
+      .pipe(tap((orden) => this.guardarOrden(orden)));
   }
 
-  guardarReparacion(ordenId: number, actividad: string, repuestos: string, pruebas: string): void {
-    this.actualizar(ordenId, (o) => {
-      o.actividad = actividad;
-      o.repuestos = repuestos;
-      o.pruebas = pruebas;
-    });
-  }
-
-  marcarListoParaEntrega(ordenId: number, responsable: string): void {
-    this.actualizar(ordenId, (o) => {
-      o.estado = 'LISTO_PARA_ENTREGA';
-      o.historial = [
-        ...o.historial,
-        this.movimiento('LISTO_PARA_ENTREGA', responsable, 'Reparación y pruebas completadas.'),
-      ];
-    });
+  guardarReparacion(
+    ordenId: number,
+    actividad: string,
+    repuestos: string,
+    pruebas: string,
+    terminada: boolean,
+  ): Observable<Orden> {
+    return this.http
+      .patch<Orden>(`${this.api}/ordenes/${ordenId}/reparacion`, { actividad, repuestos, pruebas, terminada })
+      .pipe(tap((orden) => this.guardarOrden(orden)));
   }
 
   confirmarEntrega(
@@ -358,43 +326,12 @@ export class DatosService {
     receptor: string,
     accesoriosDevueltos: string,
     observaciones: string,
-    responsable: string,
-  ): void {
-    this.actualizar(ordenId, (o) => {
-      o.receptor = receptor;
-      o.accesoriosDevueltos = accesoriosDevueltos;
-      o.observacionesEntrega = observaciones;
-      o.estado = 'ENTREGADO';
-      o.historial = [
-        ...o.historial,
-        this.movimiento('ENTREGADO', responsable, `Entregado a ${receptor}.`),
-      ];
-    });
+  ): Observable<Orden> {
+    return this.http
+      .patch<Orden>(`${this.api}/ordenes/${ordenId}/entrega`, { receptor, accesoriosDevueltos, observaciones })
+      .pipe(tap((orden) => this.guardarOrden(orden)));
   }
 
-
-  private claveTemporalCliente(dni: string): string {
-    return 'tf' + dni.slice(-4);
-  }
-
-  private siguienteIdUsuario(): number {
-    return Math.max(0, ...this.usuarios().map((u) => u.id)) + 1;
-  }
-
-  private movimiento(estado: EstadoOrden, responsable: string, detalle: string): MovimientoOrden {
-    return { fecha: new Date().toISOString(), estado, responsable, detalle };
-  }
-
-  private actualizar(id: number, cambio: (orden: Orden) => void): void {
-    this.ordenes.update((lista) =>
-      lista.map((o) => {
-        if (o.id !== id) return o;
-        const copia = { ...o };
-        cambio(copia);
-        return copia;
-      }),
-    );
-  }
 
   private guardarOrden(orden: Orden): void {
     this.ordenes.update((lista) =>

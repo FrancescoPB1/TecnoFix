@@ -5,10 +5,12 @@ import { DatosService } from '../../services/datos.service';
 import { AuthService } from '../../services/auth.service';
 import { EstadoBadge } from '../../shared/estado-badge/estado-badge';
 import { ConfirmarDialogo } from '../../shared/confirmar-dialogo/confirmar-dialogo';
+import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
+import { mensajeDeError } from '../../utils/errores';
 
 @Component({
   selector: 'app-entrega',
-  imports: [FormsModule, RouterLink, EstadoBadge, ConfirmarDialogo],
+  imports: [FormsModule, RouterLink, EstadoBadge, ConfirmarDialogo, MensajeFeedback],
   templateUrl: './entrega.html',
 })
 export class Entrega {
@@ -25,6 +27,7 @@ export class Entrega {
 
   readonly confirmando = signal(false);
   readonly entregado = signal(false);
+  readonly error = signal('');
 
   readonly deOtraSede = computed(() => this.orden()?.sedeId !== this.auth.usuario()?.sedeId);
 
@@ -45,14 +48,11 @@ export class Entrega {
   }
 
   confirmar(): void {
-    this.datos.confirmarEntrega(
-      this.id,
-      this.receptor,
-      this.accesoriosDevueltos,
-      this.observaciones,
-      this.auth.usuario()!.nombre,
-    );
     this.confirmando.set(false);
-    this.entregado.set(true);
+    this.error.set('');
+    this.datos.confirmarEntrega(this.id, this.receptor, this.accesoriosDevueltos, this.observaciones).subscribe({
+      next: () => this.entregado.set(true),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 }

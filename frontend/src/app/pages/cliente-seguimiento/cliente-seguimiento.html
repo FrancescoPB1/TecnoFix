@@ -31,7 +31,8 @@
   </div>
 
   <app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
-
+  <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+  
   @if (orden()!.estado === 'PRESUPUESTO_ENVIADO') {
     <app-decision-presupuesto [orden]="orden()!" (decidir)="pendiente.set($event)" />
   } @else if (orden()!.diagnostico) {

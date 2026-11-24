@@ -33,7 +33,7 @@
 </div>
 
 <app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
-
+<app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
 @if (!esRecepcion) {
   <div class="card mb-3">
     <div class="card-header">Resumen por sede</div>

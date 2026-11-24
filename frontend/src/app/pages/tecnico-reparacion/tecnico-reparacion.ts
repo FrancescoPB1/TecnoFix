@@ -5,6 +5,7 @@ import { DatosService } from '../../services/datos.service';
 import { AuthService } from '../../services/auth.service';
 import { EstadoBadge } from '../../shared/estado-badge/estado-badge';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
+import { mensajeDeError } from '../../utils/errores';
 
 @Component({
   selector: 'app-tecnico-reparacion',
@@ -24,6 +25,7 @@ export class TecnicoReparacion {
   pruebas = this.orden()?.pruebas ?? '';
 
   readonly mensaje = signal('');
+  readonly error = signal('');
   readonly terminado = signal(false);
 
   readonly permitido = computed(() => {
@@ -32,17 +34,23 @@ export class TecnicoReparacion {
   });
 
   guardar(): void {
-    this.datos.guardarReparacion(this.id, this.actividad, this.repuestos, this.pruebas);
-    this.mensaje.set('Avance guardado.');
+    this.mensaje.set('');
+    this.error.set('');
+    this.datos.guardarReparacion(this.id, this.actividad, this.repuestos, this.pruebas, false).subscribe({
+      next: () => this.mensaje.set('Avance guardado.'),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 
   marcarListo(formulario: NgForm): void {
-    // Para dejar la orden lista, la actividad y las pruebas son obligatorias.
     if (formulario.invalid) {
       return;
     }
-    this.datos.guardarReparacion(this.id, this.actividad, this.repuestos, this.pruebas);
-    this.datos.marcarListoParaEntrega(this.id, this.auth.usuario()!.nombre);
-    this.terminado.set(true);
+    this.mensaje.set('');
+    this.error.set('');
+    this.datos.guardarReparacion(this.id, this.actividad, this.repuestos, this.pruebas, true).subscribe({
+      next: () => this.terminado.set(true),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 }

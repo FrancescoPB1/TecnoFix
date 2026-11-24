@@ -4,10 +4,12 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatosService } from '../../services/datos.service';
 import { AuthService } from '../../services/auth.service';
 import { EstadoBadge } from '../../shared/estado-badge/estado-badge';
+import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
+import { mensajeDeError } from '../../utils/errores';
 
 @Component({
   selector: 'app-tecnico-diagnostico',
-  imports: [FormsModule, RouterLink, EstadoBadge],
+  imports: [FormsModule, RouterLink, EstadoBadge, MensajeFeedback],
   templateUrl: './tecnico-diagnostico.html',
 })
 export class TecnicoDiagnostico {
@@ -21,6 +23,7 @@ export class TecnicoDiagnostico {
   diagnostico = '';
   monto: number | null = null;
   readonly enviado = signal(false);
+  readonly error = signal('');
 
   readonly permitido = computed(() => {
     const o = this.orden();
@@ -32,7 +35,10 @@ export class TecnicoDiagnostico {
     if (formulario.invalid || (!enGarantia && this.monto === null)) {
       return;
     }
-    this.datos.enviarPresupuesto(this.id, this.diagnostico, enGarantia ? 0 : this.monto!, this.auth.usuario()!.nombre);
-    this.enviado.set(true);
+    this.error.set('');
+    this.datos.enviarPresupuesto(this.id, this.diagnostico, enGarantia ? 0 : this.monto!).subscribe({
+      next: () => this.enviado.set(true),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 }

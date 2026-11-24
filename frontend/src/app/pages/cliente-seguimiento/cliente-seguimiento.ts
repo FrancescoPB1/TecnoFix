@@ -8,6 +8,7 @@ import { EstadoBadge } from '../../shared/estado-badge/estado-badge';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
 import { ConfirmarDialogo } from '../../shared/confirmar-dialogo/confirmar-dialogo';
 import { DecisionPresupuesto } from '../decision-presupuesto/decision-presupuesto';
+import { mensajeDeError } from '../../utils/errores';
 
 const PASOS = ['Recepción', 'Diagnóstico', 'Autorización', 'Reparación', 'Listo', 'Entregado'];
 
@@ -46,18 +47,24 @@ export class ClienteSeguimiento {
 
   readonly pendiente = signal<boolean | null>(null);
   readonly mensaje = signal('');
+  readonly error = signal('');
 
   confirmarDecision(): void {
     const aprobado = this.pendiente();
     if (aprobado === null) {
       return;
     }
-    this.datos.decidirPresupuesto(this.id, aprobado, this.auth.usuario()!.nombre);
     this.pendiente.set(null);
-    this.mensaje.set(
-      aprobado
-        ? 'Aprobó el presupuesto. El técnico iniciará la reparación.'
-        : 'Rechazó el presupuesto. El equipo se preparará para su devolución sin reparar.',
-    );
+    this.mensaje.set('');
+    this.error.set('');
+    this.datos.decidirPresupuesto(this.id, aprobado).subscribe({
+      next: () =>
+        this.mensaje.set(
+          aprobado
+            ? 'Aprobó el presupuesto. El técnico iniciará la reparación.'
+            : 'Rechazó el presupuesto. El equipo se preparará para su devolución sin reparar.',
+        ),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 }
