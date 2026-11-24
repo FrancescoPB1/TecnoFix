@@ -3,6 +3,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { DatosService } from '../../services/datos.service';
 import { Sede } from '../../models/modelos';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
+import { mensajeDeError } from '../../utils/errores';
 
 @Component({
   selector: 'app-sedes',
@@ -38,26 +39,25 @@ export class Sedes {
       return;
     }
     const id = this.editandoId();
-    const resultado = id === null ? this.datos.agregarSede(this.sede) : this.datos.actualizarSede(id, this.sede);
-    if (resultado.error) {
-      this.error.set(resultado.error);
-      return;
-    }
-    this.mensaje.set(
-      id === null ? `Sede ${this.sede.nombre.trim()} registrada.` : `Datos de la sede ${this.sede.nombre.trim()} actualizados.`,
-    );
-    this.editandoId.set(null);
-    formulario.resetForm({ nombre: '', ciudad: '', telefono: '' });
+    const nombre = this.sede.nombre.trim();
+    const peticion = id === null ? this.datos.agregarSede(this.sede) : this.datos.actualizarSede(id, this.sede);
+    peticion.subscribe({
+      next: () => {
+        this.mensaje.set(id === null ? `Sede ${nombre} registrada.` : `Datos de la sede ${nombre} actualizados.`);
+        this.editandoId.set(null);
+        formulario.resetForm({ nombre: '', ciudad: '', telefono: '' });
+      },
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 
   cambiarEstado(sede: Sede): void {
     this.mensaje.set('');
     this.error.set('');
-    const resultado = this.datos.cambiarEstadoSede(sede.id);
-    if (resultado.error) {
-      this.error.set(resultado.error);
-      return;
-    }
-    this.mensaje.set(`La sede ${sede.nombre} quedó ${sede.activa ? 'inactiva' : 'activa'}.`);
+    this.datos.cambiarEstadoSede(sede.id).subscribe({
+      next: (actualizada) =>
+        this.mensaje.set(`La sede ${actualizada.nombre} quedó ${actualizada.activa ? 'activa' : 'inactiva'}.`),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 }

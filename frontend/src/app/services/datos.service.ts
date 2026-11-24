@@ -162,7 +162,7 @@ export class DatosService {
     return hoy <= this.finGarantia(fechaCompra);
   }
 
-  
+
   registrarRecepcion(
     dni: string,
     nuevoCliente: { nombres: string; correo: string; telefono: string } | null,
@@ -285,63 +285,35 @@ export class DatosService {
   }
 
 
-  cantidadOrdenesAbiertasDeSede(id: number): number {
-    return this.ordenes().filter((o) => o.sedeId === id && o.estado !== 'ENTREGADO').length;
+  agregarSede(datos: { nombre: string; ciudad: string; telefono: string }): Observable<Sede> {
+    return this.http
+      .post<Sede>(`${this.api}/sedes`, datos)
+      .pipe(tap((sede) => this.sedes.update((lista) => [...lista, sede])));
   }
 
-  agregarSede(datos: { nombre: string; ciudad: string; telefono: string }): { error?: string } {
-    const nombre = datos.nombre.trim();
-    if (this.sedes().some((s) => s.nombre.toLowerCase() === nombre.toLowerCase())) {
-      return { error: `Ya existe una sede llamada ${nombre}.` };
-    }
-    const id = Math.max(0, ...this.sedes().map((s) => s.id)) + 1;
-    this.sedes.update((lista) => [
-      ...lista,
-      { id, nombre, ciudad: datos.ciudad.trim(), telefono: datos.telefono, activa: true },
-    ]);
-    return {};
+  actualizarSede(id: number, datos: { nombre: string; ciudad: string; telefono: string }): Observable<Sede> {
+    return this.http
+      .put<Sede>(`${this.api}/sedes/${id}`, datos)
+      .pipe(tap((sede) => this.sedes.update((lista) => lista.map((s) => (s.id === id ? sede : s)))));
   }
 
-  actualizarSede(id: number, datos: { nombre: string; ciudad: string; telefono: string }): { error?: string } {
-    const nombre = datos.nombre.trim();
-    if (this.sedes().some((s) => s.id !== id && s.nombre.toLowerCase() === nombre.toLowerCase())) {
-      return { error: `Ya existe una sede llamada ${nombre}.` };
-    }
-    this.sedes.update((lista) =>
-      lista.map((s) => (s.id === id ? { ...s, nombre, ciudad: datos.ciudad.trim(), telefono: datos.telefono } : s)),
-    );
-    return {};
-  }
-
-  cambiarEstadoSede(id: number): { error?: string } {
-    const sede = this.sede(id);
-    if (sede?.activa && this.cantidadOrdenesAbiertasDeSede(id) > 0) {
-      return { error: 'No se puede desactivar: la sede tiene órdenes sin entregar.' };
-    }
-    this.sedes.update((lista) => lista.map((s) => (s.id === id ? { ...s, activa: !s.activa } : s)));
-    return {};
+  cambiarEstadoSede(id: number): Observable<Sede> {
+    return this.http
+      .patch<Sede>(`${this.api}/sedes/${id}/estado`, {})
+      .pipe(tap((sede) => this.sedes.update((lista) => lista.map((s) => (s.id === id ? sede : s)))));
   }
 
 
-  agregarTipoEquipo(nombre: string): { error?: string } {
-    const limpio = nombre.trim();
-    if (limpio.length < 2) {
-      return { error: 'El nombre del tipo debe tener al menos 2 caracteres.' };
-    }
-    if (this.tiposEquipo().some((t) => t.nombre.toLowerCase() === limpio.toLowerCase())) {
-      return { error: `El tipo ${limpio} ya está registrado.` };
-    }
-    const id = Math.max(0, ...this.tiposEquipo().map((t) => t.id)) + 1;
-    this.tiposEquipo.update((lista) => [...lista, { id, nombre: limpio }]);
-    return {};
+  agregarTipoEquipo(nombre: string): Observable<TipoEquipo> {
+    return this.http
+      .post<TipoEquipo>(`${this.api}/tipos-equipo`, { nombre: nombre.trim() })
+      .pipe(tap((tipo) => this.tiposEquipo.update((lista) => [...lista, tipo])));
   }
 
-  eliminarTipoEquipo(id: number): { error?: string } {
-    if (this.cantidadEquiposDeTipo(id) > 0) {
-      return { error: 'No se puede eliminar: hay equipos registrados con ese tipo.' };
-    }
-    this.tiposEquipo.update((lista) => lista.filter((t) => t.id !== id));
-    return {};
+  eliminarTipoEquipo(id: number): Observable<void> {
+    return this.http
+      .delete<void>(`${this.api}/tipos-equipo/${id}`)
+      .pipe(tap(() => this.tiposEquipo.update((lista) => lista.filter((t) => t.id !== id))));
   }
 
 

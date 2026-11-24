@@ -4,8 +4,8 @@ import { DatosService } from '../../services/datos.service';
 import { TipoEquipo } from '../../models/modelos';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
 import { ConfirmarDialogo } from '../../shared/confirmar-dialogo/confirmar-dialogo';
+import { mensajeDeError } from '../../utils/errores';
 
-/** Catálogo de tipos de equipo (laptop, impresora, etc.). Solo el administrador lo mantiene. */
 @Component({
   selector: 'app-tipos-equipo',
   imports: [FormsModule, MensajeFeedback, ConfirmarDialogo],
@@ -25,13 +25,14 @@ export class TiposEquipo {
     if (formulario.invalid) {
       return;
     }
-    const resultado = this.datos.agregarTipoEquipo(this.nombre);
-    if (resultado.error) {
-      this.error.set(resultado.error);
-      return;
-    }
-    this.mensaje.set(`Tipo ${this.nombre.trim()} agregado al catálogo.`);
-    formulario.resetForm({ nombre: '' });
+    const nombre = this.nombre.trim();
+    this.datos.agregarTipoEquipo(nombre).subscribe({
+      next: () => {
+        this.mensaje.set(`Tipo ${nombre} agregado al catálogo.`);
+        formulario.resetForm({ nombre: '' });
+      },
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 
   pedirEliminar(tipo: TipoEquipo): void {
@@ -44,11 +45,11 @@ export class TiposEquipo {
     if (!tipo) {
       return;
     }
-    const resultado = this.datos.eliminarTipoEquipo(tipo.id);
-    if (resultado.error) {
-      this.error.set(resultado.error);
-    } else {
-      this.mensaje.set(`Tipo ${tipo.nombre} eliminado.`);
-    }
+    this.mensaje.set('');
+    this.error.set('');
+    this.datos.eliminarTipoEquipo(tipo.id).subscribe({
+      next: () => this.mensaje.set(`Tipo ${tipo.nombre} eliminado.`),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 }
