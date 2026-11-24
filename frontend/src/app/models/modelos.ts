@@ -32,7 +32,7 @@ export interface Usuario {
   id: number;
   nombre: string;
   usuario: string;
-  clave: string;
+  clave?: string;
   rol: Rol;
   activo: boolean;
   clienteId?: number;

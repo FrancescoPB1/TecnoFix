@@ -1,10 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Router } from '@angular/router';
-import { DatosService } from '../../services/datos.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { ETIQUETA_ROL, Usuario } from '../../models/modelos';
+import { ETIQUETA_ROL, Rol } from '../../models/modelos';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
+import { mensajeDeError } from '../../utils/errores';
+
+interface CuentaPrueba {
+  usuario: string;
+  rol: Rol;
+}
 
 @Component({
   selector: 'app-login',
@@ -13,41 +18,49 @@ import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback'
 })
 export class Login {
   private auth = inject(AuthService);
-  private datos = inject(DatosService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   usuario = '';
   clave = '';
   readonly error = signal('');
+  readonly entrando = signal(false);
 
   readonly etiquetaRol = ETIQUETA_ROL;
 
-  // Cuentas de prueba que se muestran en el prototipo (una por rol).
-  readonly cuentasPrueba: Usuario[] = this.datos
-    .usuarios()
-    .filter((u) => ['admin', 'recepcion', 'tecnico1', 'cliente1'].includes(u.usuario));
+  readonly cuentasPrueba: CuentaPrueba[] = [
+    { usuario: 'admin', rol: 'ADMIN' },
+    { usuario: 'recepcion', rol: 'RECEPCION' },
+    { usuario: 'tecnico1', rol: 'TECNICO' },
+    { usuario: 'cliente1', rol: 'CLIENTE' },
+  ];
 
   constructor() {
     const actual = this.auth.usuario();
     if (actual) {
       this.router.navigate([this.auth.rutaInicio(actual.rol)]);
+    } else if (this.route.snapshot.queryParamMap.has('expirada')) {
+      this.error.set('Su sesión venció. Ingrese nuevamente.');
     }
   }
 
-  usarCuenta(cuenta: Usuario): void {
+  usarCuenta(cuenta: CuentaPrueba): void {
     this.usuario = cuenta.usuario;
-    this.clave = cuenta.clave;
+    this.clave = 'demo123';
   }
 
   ingresar(formulario: NgForm): void {
-    if (formulario.invalid) {
+    if (formulario.invalid || this.entrando()) {
       return;
     }
-    if (this.auth.iniciarSesion(this.usuario, this.clave)) {
-      const actual = this.auth.usuario()!;
-      this.router.navigate([this.auth.rutaInicio(actual.rol)]);
-    } else {
-      this.error.set('Usuario o contraseña incorrectos.');
-    }
+    this.error.set('');
+    this.entrando.set(true);
+    this.auth.iniciarSesion(this.usuario, this.clave).subscribe({
+      next: (respuesta) => this.router.navigate([this.auth.rutaInicio(respuesta.usuario.rol)]),
+      error: (e) => {
+        this.entrando.set(false);
+        this.error.set(mensajeDeError(e));
+      },
+    });
   }
 }

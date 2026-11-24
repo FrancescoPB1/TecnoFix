@@ -51,7 +51,9 @@
               <div class="invalid-feedback">Ingrese su contraseña.</div>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-lg w-100">Ingresar</button>
+            <button type="submit" class="btn btn-primary btn-lg w-100" [disabled]="entrando()">
+              {{ entrando() ? 'Ingresando...' : 'Ingresar' }}
+            </button>
           </form>
         </div>
       </div>
@@ -60,10 +62,10 @@
         <div class="card-body">
           <p class="small text-muted mb-2">
             <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-            Prototipo con datos de ejemplo. Elija una cuenta de prueba para completar el formulario:
+            Datos de ejemplo cargados por la API. Elija una cuenta de prueba (clave demo123) para completar el formulario:
           </p>
           <div class="d-flex flex-wrap gap-2">
-            @for (cuenta of cuentasPrueba; track cuenta.id) {
+            @for (cuenta of cuentasPrueba; track cuenta.usuario) {
               <button type="button" class="btn btn-outline-secondary btn-sm" (click)="usarCuenta(cuenta)">
                 {{ etiquetaRol[cuenta.rol] }} ({{ cuenta.usuario }})
               </button>

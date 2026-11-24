@@ -1,44 +1,59 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { Rol, Usuario } from '../models/modelos';
-import { DatosService } from './datos.service';
 
-/**
- * Autenticación simulada del prototipo.
- * Verifica usuario y clave contra los datos de ejemplo. En el Capítulo 6 se
- * reemplazará por el inicio de sesión contra la API con Spring Security y JWT.
- */
+interface RespuestaLogin {
+  token: string;
+  usuario: Usuario;
+}
+
+const CLAVE_SESION = 'tecnofix-sesion';
+
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private datos = inject(DatosService);
+  private http = inject(HttpClient);
   private router = inject(Router);
 
-  readonly usuario = signal<Usuario | null>(this.leerSesion());
+  private token_: string | null = null;
+  readonly usuario = signal<Usuario | null>(null);
 
-  iniciarSesion(usuario: string, clave: string): boolean {
-    const encontrado = this.datos
-      .usuarios()
-      .find((u) => u.usuario === usuario.trim() && u.clave === clave && u.activo);
-    if (!encontrado) {
-      return false;
+  constructor() {
+    const guardada = this.leerSesion();
+    if (guardada) {
+      this.token_ = guardada.token;
+      this.usuario.set(guardada.usuario);
     }
-    this.usuario.set(encontrado);
-    try {
-      sessionStorage.setItem('tecnofix-usuario', String(encontrado.id));
-    } catch {
-      // Si el navegador bloquea el almacenamiento, la sesión dura solo mientras esté abierta la página.
-    }
-    return true;
   }
 
-  cerrarSesion(): void {
+  token(): string | null {
+    return this.token_;
+  }
+
+  iniciarSesion(usuario: string, clave: string): Observable<RespuestaLogin> {
+    return this.http
+      .post<RespuestaLogin>(`${environment.apiUrl}/auth/login`, { usuario: usuario.trim(), clave })
+      .pipe(
+        tap((respuesta) => {
+          this.token_ = respuesta.token;
+          this.usuario.set(respuesta.usuario);
+          this.guardarSesion(respuesta);
+        }),
+      );
+  }
+
+  cerrarSesion(expirada = false): void {
+    this.token_ = null;
     this.usuario.set(null);
     try {
-      sessionStorage.removeItem('tecnofix-usuario');
+      sessionStorage.removeItem(CLAVE_SESION);
     } catch {
-      // Sin acción.
+      
     }
-    this.router.navigate(['/login']);
+    this.router.navigate(['/login'], { queryParams: expirada ? { expirada: 1 } : {} });
   }
 
   rutaInicio(rol: Rol): string {
@@ -53,10 +68,18 @@ export class AuthService {
     }
   }
 
-  private leerSesion(): Usuario | null {
+  private guardarSesion(respuesta: RespuestaLogin): void {
     try {
-      const id = Number(sessionStorage.getItem('tecnofix-usuario'));
-      return this.datos.usuarios().find((u) => u.id === id) ?? null;
+      sessionStorage.setItem(CLAVE_SESION, JSON.stringify(respuesta));
+    } catch {
+
+    }
+  }
+
+  private leerSesion(): RespuestaLogin | null {
+    try {
+      const texto = sessionStorage.getItem(CLAVE_SESION);
+      return texto ? (JSON.parse(texto) as RespuestaLogin) : null;
     } catch {
       return null;
     }
