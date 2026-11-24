@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Rol, Usuario } from '../models/modelos';
+import { DatosService } from './datos.service';
 
 interface RespuestaLogin {
   token: string;
@@ -17,6 +18,7 @@ const CLAVE_SESION = 'tecnofix-sesion';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private datos = inject(DatosService);
 
   private token_: string | null = null;
   readonly usuario = signal<Usuario | null>(null);
@@ -48,6 +50,7 @@ export class AuthService {
   cerrarSesion(expirada = false): void {
     this.token_ = null;
     this.usuario.set(null);
+    this.datos.vaciar();
     try {
       sessionStorage.removeItem(CLAVE_SESION);
     } catch {

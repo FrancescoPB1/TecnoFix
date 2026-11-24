@@ -71,6 +71,7 @@ export interface Equipo {
   modelo: string;
   serie: string;
   fechaCompra: string;
+  tipoNombre?: string;
 }
 
 export const MESES_GARANTIA = 12;
@@ -89,6 +90,10 @@ export interface Orden {
   equipoId: number;
   sedeId: number;
   tecnicoId?: number;
+  clienteNombre?: string;
+  sedeNombre?: string;
+  tecnicoNombre?: string;
+  equipo?: Equipo;
   enGarantia: boolean;
   falla: string;
   accesorios: string;

@@ -37,6 +37,18 @@
   </aside>
 
   <main class="app-main">
+    @if (datos.errorCarga()) {
+      <div class="alert alert-danger" role="alert">
+        {{ datos.errorCarga() }} Recargue la página para reintentar.
+      </div>
+    }
     <router-outlet />
   </main>
 </div>
+
+@if (carga.activa()) {
+  <div class="carga-overlay" role="status" aria-live="polite">
+    <div class="spinner-border text-primary" aria-hidden="true"></div>
+    <span class="visually-hidden">Procesando...</span>
+  </div>
+}

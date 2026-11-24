@@ -139,7 +139,7 @@
                 }
               </td>
               <td><app-estado-badge [estado]="o.estado" /></td>
-              <td>{{ datos.nombreTecnico(o.tecnicoId) }}</td>
+              <td>{{ o.tecnicoNombre || 'Sin asignar' }}</td>
               <td>
                 @if (o.estado === 'RECIBIDO') {
                   <div class="input-group input-group-sm">

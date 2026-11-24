@@ -436,4 +436,22 @@ h1.h4 {
   .login-brand ul {
     display: none;
   }
+
+  .carga-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.6);
+    opacity: 0;
+    animation: carga-aparecer 0.1s linear 0.3s forwards;
+  }
+
+  @keyframes carga-aparecer {
+    to {
+      opacity: 1;
+    }
+  }
 }

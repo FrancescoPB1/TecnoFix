@@ -15,7 +15,7 @@
         <h2 class="h5 mb-0">Orden {{ orden()!.codigo }}</h2>
         <app-estado-badge [estado]="orden()!.estado" />
       </div>
-      <p class="mb-1"><strong>Técnico responsable:</strong> {{ datos.nombreTecnico(orden()!.tecnicoId) }}</p>
+      <p class="mb-1"><strong>Técnico responsable:</strong> {{ orden()!.tecnicoNombre }}</p>
       <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}</p>
       <p class="mb-0"><strong>Presupuesto aprobado:</strong> S/ {{ orden()!.montoPresupuesto?.toFixed(2) }}</p>
     </div>

@@ -144,11 +144,7 @@
               <td>{{ c.correo }}</td>
               <td>{{ datos.cantidadOrdenesDeCliente(c.id) }}</td>
               <td>
-                @if (datos.accesoDeCliente(c.id); as acceso) {
-                  <span class="badge rounded-pill text-bg-success">{{ acceso.usuario }}</span>
-                } @else {
-                  <span class="text-muted">—</span>
-                }
+                <span class="badge rounded-pill text-bg-success">{{ c.dni }}</span> 
               </td>
               @if (esRecepcion) {
                 <td class="text-nowrap">

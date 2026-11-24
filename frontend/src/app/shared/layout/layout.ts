@@ -1,6 +1,8 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { CargaService } from '../../services/carga.service';
+import { DatosService } from '../../services/datos.service';
 import { ETIQUETA_ROL } from '../../models/modelos';
 
 interface OpcionMenu {
@@ -16,6 +18,8 @@ interface OpcionMenu {
 })
 export class Layout {
   private auth = inject(AuthService);
+  readonly datos = inject(DatosService);
+  readonly carga = inject(CargaService);
 
   readonly usuario = this.auth.usuario;
 

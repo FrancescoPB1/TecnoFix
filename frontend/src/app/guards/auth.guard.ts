@@ -1,16 +1,21 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { DatosService } from '../services/datos.service';
 import { Rol } from '../models/modelos';
 
-/** Exige que haya una sesión iniciada. */
+
 export const autenticado: CanActivateFn = () => {
   const auth = inject(AuthService);
+  const datos = inject(DatosService);
   const router = inject(Router);
-  return auth.usuario() ? true : router.createUrlTree(['/login']);
+  const usuario = auth.usuario();
+  if (!usuario) {
+    return router.createUrlTree(['/login']);
+  }
+  return datos.cargarInicial(usuario.rol);
 };
 
-/** Exige que el rol del usuario esté entre los roles permitidos en data.roles de la ruta. */
 export const conRol: CanActivateFn = (route) => {
   const auth = inject(AuthService);
   const router = inject(Router);

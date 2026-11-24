@@ -1,4 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject, signal } from '@angular/core';
+import { Observable, catchError, forkJoin, map, of, switchMap, tap, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 import {
   Cliente,
   Equipo,
@@ -11,124 +14,75 @@ import {
   TipoEquipo,
   Usuario,
 } from '../models/modelos';
+import { mensajeDeError } from '../utils/errores';
 
-/**
- * Data Service del prototipo.
- * Guarda los datos de ejemplo en memoria con signals. En el Capítulo 6 estas
- * operaciones se reemplazarán por peticiones HttpClient a la API REST.
- */
+export interface AccesoCliente {
+  usuario: string;
+  clave: string;
+}
+
+
 @Injectable({ providedIn: 'root' })
 export class DatosService {
-  /** Red de centros de servicio del caso de estudio (datos de ejemplo). */
-  readonly sedes = signal<Sede[]>([
-    { id: 1, nombre: 'Lima Centro', ciudad: 'Lima', telefono: '014000101', activa: true },
-    { id: 2, nombre: 'Lima Norte', ciudad: 'Lima', telefono: '014000102', activa: true },
-    { id: 3, nombre: 'Trujillo', ciudad: 'Trujillo', telefono: '044000103', activa: true },
-  ]);
+  private http = inject(HttpClient);
+  private api = environment.apiUrl;
 
-  readonly usuarios = signal<Usuario[]>([
-    { id: 1, nombre: 'Marcela Torres', usuario: 'recepcion', clave: 'demo123', rol: 'RECEPCION', activo: true, sedeId: 1, dni: '40125478', telefono: '944100200', correo: 'marcela.torres@correo.com' },
-    { id: 2, nombre: 'Julio Quispe', usuario: 'tecnico1', clave: 'demo123', rol: 'TECNICO', activo: true, sedeId: 1, dni: '41236587', telefono: '955200300', correo: 'julio.quispe@correo.com', especialidad: 'Celulares y tablets' },
-    { id: 3, nombre: 'Carla Vera', usuario: 'tecnico2', clave: 'demo123', rol: 'TECNICO', activo: true, sedeId: 1, dni: '42587963', telefono: '966300400', correo: 'carla.vera@correo.com', especialidad: 'Laptops' },
-    { id: 4, nombre: 'Rolando Díaz', usuario: 'tecnico3', clave: 'demo123', rol: 'TECNICO', activo: true, sedeId: 3, dni: '43698521', telefono: '977400500', correo: 'rolando.diaz@correo.com', especialidad: 'Línea blanca' },
-    { id: 5, nombre: 'Luis Paredes Rojas', usuario: 'cliente1', clave: 'demo123', rol: 'CLIENTE', activo: true, clienteId: 1 },
-    { id: 6, nombre: 'Ana Rojas Vega', usuario: 'cliente2', clave: 'demo123', rol: 'CLIENTE', activo: true, clienteId: 2 },
-    { id: 7, nombre: 'Ricardo Salazar', usuario: 'admin', clave: 'demo123', rol: 'ADMIN', activo: true, dni: '40789654', telefono: '988500600', correo: 'ricardo.salazar@correo.com' },
-    { id: 8, nombre: 'Diego Alarcón', usuario: 'recepcion2', clave: 'demo123', rol: 'RECEPCION', activo: true, sedeId: 2, dni: '44125896', telefono: '933600700', correo: 'diego.alarcon@correo.com' },
-    { id: 9, nombre: 'Patricia Lozano', usuario: 'recepcion3', clave: 'demo123', rol: 'RECEPCION', activo: true, sedeId: 3, dni: '45236987', telefono: '922700800', correo: 'patricia.lozano@correo.com' },
-    { id: 10, nombre: 'Mónica Ruiz', usuario: 'tecnico4', clave: 'demo123', rol: 'TECNICO', activo: true, sedeId: 2, dni: '46321458', telefono: '911800900', correo: 'monica.ruiz@correo.com', especialidad: 'Televisores' },
-  ]);
+  readonly sedes = signal<Sede[]>([]);
+  readonly usuarios = signal<Usuario[]>([]);
+  readonly clientes = signal<Cliente[]>([]);
+  readonly tiposEquipo = signal<TipoEquipo[]>([]);
+  readonly equipos = signal<Equipo[]>([]);
+  readonly ordenes = signal<Orden[]>([]);
 
-  readonly tiposEquipo = signal<TipoEquipo[]>([
-    { id: 1, nombre: 'Celular' },
-    { id: 2, nombre: 'Tablet' },
-    { id: 3, nombre: 'Televisor' },
-    { id: 4, nombre: 'Laptop' },
-    { id: 5, nombre: 'Electrodoméstico' },
-  ]);
+  readonly cargado = signal(false);
+  readonly errorCarga = signal('');
 
-  readonly clientes = signal<Cliente[]>([
-    { id: 1, dni: '45871236', nombres: 'Luis Paredes Rojas', correo: 'luis.paredes@correo.com', telefono: '987654321' },
-    { id: 2, dni: '72418596', nombres: 'Ana Rojas Vega', correo: 'ana.rojas@correo.com', telefono: '945123678' },
-    { id: 3, dni: '41256387', nombres: 'Pedro Salinas Cruz', correo: 'pedro.salinas@correo.com', telefono: '912345987' },
-  ]);
 
-  readonly equipos = signal<Equipo[]>([
-    { id: 1, clienteId: 1, tipoId: 1, modelo: 'Galaxy A54', serie: '356938035643809', fechaCompra: '2026-03-10' },
-    { id: 2, clienteId: 2, tipoId: 3, modelo: 'UN55CU7000', serie: 'TV-77412', fechaCompra: '2024-11-05' },
-    { id: 3, clienteId: 1, tipoId: 4, modelo: 'Galaxy Book3', serie: 'NB-8842', fechaCompra: '2025-02-14' },
-    { id: 4, clienteId: 3, tipoId: 5, modelo: 'Lavadora WA19', serie: 'LV-30551', fechaCompra: '2026-01-20' },
-    { id: 5, clienteId: 2, tipoId: 2, modelo: 'Galaxy Tab A9', serie: 'TB-90217', fechaCompra: '2025-06-02' },
-  ]);
+  cargarInicial(rol: Rol): Observable<boolean> {
+    if (this.cargado()) {
+      return of(true);
+    }
+    const esPersonal = rol === 'ADMIN' || rol === 'RECEPCION';
+    return forkJoin({
+      sedes: this.http.get<Sede[]>(`${this.api}/sedes`),
+      tipos: this.http.get<TipoEquipo[]>(`${this.api}/tipos-equipo`),
+      ordenes: this.http.get<Orden[]>(`${this.api}/ordenes`),
+      clientes: esPersonal ? this.http.get<Cliente[]>(`${this.api}/clientes`) : of([] as Cliente[]),
+      personal:
+        rol === 'ADMIN'
+          ? this.http.get<Usuario[]>(`${this.api}/usuarios`)
+          : rol === 'RECEPCION'
+            ? this.http.get<Usuario[]>(`${this.api}/usuarios/tecnicos`)
+            : of([] as Usuario[]),
+    }).pipe(
+      tap((datos) => {
+        this.sedes.set(datos.sedes);
+        this.tiposEquipo.set(datos.tipos);
+        this.clientes.set(datos.clientes);
+        this.usuarios.set(datos.personal);
+        this.ordenes.set(datos.ordenes);
+        this.equipos.set(this.equiposDe(datos.ordenes));
+        this.errorCarga.set('');
+        this.cargado.set(true);
+      }),
+      map(() => true),
+      catchError((error) => {
+        this.errorCarga.set(mensajeDeError(error));
+        return of(error?.status !== 401);
+      }),
+    );
+  }
 
-  readonly ordenes = signal<Orden[]>([
-    {
-      id: 1, codigo: 'ST-0001', clienteId: 1, equipoId: 1, sedeId: 1, tecnicoId: 2, enGarantia: true,
-      falla: 'La batería se descarga muy rápido y el equipo se apaga solo.',
-      accesorios: 'Cargador original',
-      estado: 'EN_DIAGNOSTICO',
-      historial: [
-        { fecha: '2026-10-26T09:10:00', estado: 'RECIBIDO', responsable: 'Marcela Torres', detalle: 'Equipo recibido con cargador original. Está en garantía.' },
-        { fecha: '2026-10-26T11:30:00', estado: 'EN_DIAGNOSTICO', responsable: 'Marcela Torres', detalle: 'Asignada a Julio Quispe.' },
-      ],
-    },
-    {
-      id: 2, codigo: 'ST-0002', clienteId: 2, equipoId: 2, sedeId: 2, enGarantia: false,
-      falla: 'La pantalla muestra líneas verticales y a veces no enciende.',
-      accesorios: 'Control remoto',
-      estado: 'RECIBIDO',
-      historial: [
-        { fecha: '2026-10-28T08:45:00', estado: 'RECIBIDO', responsable: 'Diego Alarcón', detalle: 'Equipo recibido con control remoto. Garantía vencida.' },
-      ],
-    },
-    {
-      id: 3, codigo: 'ST-0003', clienteId: 1, equipoId: 3, sedeId: 1, tecnicoId: 3, enGarantia: false,
-      falla: 'El sistema tarda mucho en iniciar y se congela.',
-      accesorios: 'Cargador y mochila',
-      estado: 'PRESUPUESTO_ENVIADO',
-      diagnostico: 'Unidad de almacenamiento con sectores dañados. Se recomienda cambiarla por una SSD y reinstalar el sistema.',
-      montoPresupuesto: 280,
-      historial: [
-        { fecha: '2026-10-24T10:00:00', estado: 'RECIBIDO', responsable: 'Marcela Torres', detalle: 'Equipo recibido con cargador y mochila. Garantía vencida.' },
-        { fecha: '2026-10-24T12:15:00', estado: 'EN_DIAGNOSTICO', responsable: 'Marcela Torres', detalle: 'Asignada a Carla Vera.' },
-        { fecha: '2026-10-25T16:40:00', estado: 'PRESUPUESTO_ENVIADO', responsable: 'Carla Vera', detalle: 'Presupuesto de S/ 280.00 enviado al cliente.' },
-      ],
-    },
-    {
-      id: 4, codigo: 'ST-0004', clienteId: 3, equipoId: 4, sedeId: 3, tecnicoId: 4, enGarantia: true,
-      falla: 'No desagua y muestra un código de error en el panel.',
-      accesorios: 'Manguera de desagüe',
-      estado: 'EN_REPARACION',
-      diagnostico: 'Bomba de desagüe obstruida y con desgaste. Se reemplaza la bomba (cubierto por garantía).',
-      montoPresupuesto: 0,
-      decision: 'APROBADO',
-      actividad: 'Cambio de la bomba de desagüe.',
-      historial: [
-        { fecha: '2026-10-22T09:30:00', estado: 'RECIBIDO', responsable: 'Patricia Lozano', detalle: 'Equipo recibido con manguera de desagüe. Está en garantía.' },
-        { fecha: '2026-10-22T10:00:00', estado: 'EN_DIAGNOSTICO', responsable: 'Patricia Lozano', detalle: 'Asignada a Rolando Díaz.' },
-        { fecha: '2026-10-23T15:20:00', estado: 'EN_REPARACION', responsable: 'Rolando Díaz', detalle: 'Diagnóstico registrado. Cubierto por garantía: pasa directo a reparación.' },
-      ],
-    },
-    {
-      id: 5, codigo: 'ST-0005', clienteId: 2, equipoId: 5, sedeId: 2, tecnicoId: 10, enGarantia: false,
-      falla: 'La pantalla no responde al tacto.',
-      accesorios: 'Cargador y funda',
-      estado: 'LISTO_PARA_ENTREGA',
-      diagnostico: 'Conector del panel táctil suelto. Se reconectó y se calibró.',
-      montoPresupuesto: 60,
-      decision: 'APROBADO',
-      actividad: 'Reconexión y calibración del panel táctil.',
-      repuestos: 'Ninguno',
-      pruebas: 'Táctil y pantalla sin fallas durante 30 minutos.',
-      historial: [
-        { fecha: '2026-10-20T11:00:00', estado: 'RECIBIDO', responsable: 'Diego Alarcón', detalle: 'Equipo recibido con cargador y funda. Garantía vencida.' },
-        { fecha: '2026-10-20T11:20:00', estado: 'EN_DIAGNOSTICO', responsable: 'Diego Alarcón', detalle: 'Asignada a Mónica Ruiz.' },
-        { fecha: '2026-10-21T10:10:00', estado: 'PRESUPUESTO_ENVIADO', responsable: 'Mónica Ruiz', detalle: 'Presupuesto de S/ 60.00 enviado al cliente.' },
-        { fecha: '2026-10-21T12:00:00', estado: 'EN_REPARACION', responsable: 'Ana Rojas Vega', detalle: 'El cliente aprobó el presupuesto.' },
-        { fecha: '2026-10-22T17:30:00', estado: 'LISTO_PARA_ENTREGA', responsable: 'Mónica Ruiz', detalle: 'Reparación y pruebas completadas.' },
-      ],
-    },
-  ]);
+  vaciar(): void {
+    this.sedes.set([]);
+    this.usuarios.set([]);
+    this.clientes.set([]);
+    this.tiposEquipo.set([]);
+    this.equipos.set([]);
+    this.ordenes.set([]);
+    this.errorCarga.set('');
+    this.cargado.set(false);
+  }
 
 
   obtenerOrden(id: number): Orden | undefined {
@@ -208,7 +162,7 @@ export class DatosService {
     return hoy <= this.finGarantia(fechaCompra);
   }
 
-
+  
   registrarRecepcion(
     dni: string,
     nuevoCliente: { nombres: string; correo: string; telefono: string } | null,
@@ -270,6 +224,7 @@ export class DatosService {
     this.ordenes.update((lista) => [orden, ...lista]);
     return { orden, accesoCliente };
   }
+
 
   crearCliente(datos: {
     dni: string;
@@ -475,7 +430,7 @@ export class DatosService {
     });
   }
 
-
+ 
   enviarPresupuesto(ordenId: number, diagnostico: string, monto: number, responsable: string): void {
     this.actualizar(ordenId, (o) => {
       o.diagnostico = diagnostico;
@@ -572,5 +527,22 @@ export class DatosService {
         return copia;
       }),
     );
+  }
+
+  private guardarOrden(orden: Orden): void {
+    this.ordenes.update((lista) =>
+      lista.some((o) => o.id === orden.id) ? lista.map((o) => (o.id === orden.id ? orden : o)) : [orden, ...lista],
+    );
+    this.equipos.set(this.equiposDe(this.ordenes()));
+  }
+
+  private equiposDe(ordenes: Orden[]): Equipo[] {
+    const porId = new Map<number, Equipo>();
+    for (const orden of ordenes) {
+      if (orden.equipo) {
+        porId.set(orden.equipo.id, orden.equipo);
+      }
+    }
+    return [...porId.values()];
   }
 }
