@@ -37,7 +37,7 @@ export class DatosService {
   readonly cargado = signal(false);
   readonly errorCarga = signal('');
 
-  
+
   cargarInicial(rol: Rol): Observable<boolean> {
     if (this.cargado()) {
       return of(true);
@@ -87,10 +87,6 @@ export class DatosService {
 
   obtenerOrden(id: number): Orden | undefined {
     return this.ordenes().find((o) => o.id === id);
-  }
-
-  buscarClientePorDni(dni: string): Cliente | undefined {
-    return this.clientes().find((c) => c.dni === dni);
   }
 
   cliente(id: number): Cliente | undefined {
@@ -163,125 +159,59 @@ export class DatosService {
   }
 
  
-  registrarRecepcion(
-    dni: string,
-    nuevoCliente: { nombres: string; correo: string; telefono: string } | null,
-    equipo: { tipoId: number; modelo: string; serie: string; fechaCompra: string },
-    falla: string,
-    accesorios: string,
-    responsable: string,
-    sedeId: number,
-  ): { orden?: Orden; accesoCliente?: { usuario: string; clave: string }; error?: string } {
-    let accesoCliente: { usuario: string; clave: string } | undefined;
-    let cliente = this.buscarClientePorDni(dni);
-    if (!cliente) {
-      if (!nuevoCliente) {
-        return { error: 'El cliente no existe; complete sus datos.' };
-      }
-      const creado = this.crearCliente({ dni, ...nuevoCliente });
-      if (creado.error) {
-        return { error: creado.error };
-      }
-      cliente = creado.cliente!;
-      accesoCliente = creado.acceso;
-    }
-
-    let equipoReg = this.equipos().find(
-      (e) => e.clienteId === cliente!.id && e.serie === equipo.serie,
-    );
-    if (equipoReg) {
-      const abierta = this.ordenes().some(
-        (o) => o.equipoId === equipoReg!.id && o.estado !== 'ENTREGADO',
-      );
-      if (abierta) {
-        return { error: 'Este equipo ya tiene una orden abierta.' };
-      }
-    } else {
-      equipoReg = { id: this.equipos().length + 1, clienteId: cliente.id, ...equipo };
-      this.equipos.update((lista) => [...lista, equipoReg!]);
-    }
-
-    const enGarantia = this.garantiaVigente(equipoReg.fechaCompra);
-    const numero = this.ordenes().length + 1;
-    const orden: Orden = {
-      id: numero,
-      codigo: 'ST-' + String(numero).padStart(4, '0'),
-      clienteId: cliente.id,
-      equipoId: equipoReg.id,
-      sedeId,
-      enGarantia,
-      falla,
-      accesorios,
-      estado: 'RECIBIDO',
-      historial: [
-        this.movimiento(
-          'RECIBIDO',
-          responsable,
-          `Equipo recibido. Accesorios: ${accesorios || 'ninguno'}. ${enGarantia ? 'Está en garantía.' : 'Garantía vencida.'}`,
+  registrarRecepcion(datos: {
+    dni: string;
+    nombres?: string;
+    correo?: string;
+    telefono?: string;
+    tipoId: number;
+    modelo: string;
+    serie: string;
+    fechaCompra: string;
+    falla: string;
+    accesorios: string;
+  }): Observable<{ orden: Orden; accesoCliente: AccesoCliente | null }> {
+    return this.http
+      .post<{ orden: Orden; accesoCliente: AccesoCliente | null }>(`${this.api}/ordenes/recepcion`, datos)
+      .pipe(
+        tap((respuesta) => this.guardarOrden(respuesta.orden)),
+        switchMap((respuesta) =>
+          respuesta.accesoCliente
+            ? this.http.get<Cliente[]>(`${this.api}/clientes`).pipe(
+                tap((lista) => this.clientes.set(lista)),
+                map(() => respuesta),
+              )
+            : of(respuesta),
         ),
-      ],
-    };
-    this.ordenes.update((lista) => [orden, ...lista]);
-    return { orden, accesoCliente };
+      );
   }
 
+
+  buscarClientePorDni(dni: string): Observable<Cliente | null> {
+    return this.http.get<Cliente>(`${this.api}/clientes/dni/${dni}`).pipe(
+      catchError((error) => (error.status === 404 ? of(null) : throwError(() => error))),
+    );
+  }
 
   crearCliente(datos: {
     dni: string;
     nombres: string;
     correo: string;
     telefono: string;
-  }): { cliente?: Cliente; acceso?: { usuario: string; clave: string }; error?: string } {
-    if (this.buscarClientePorDni(datos.dni)) {
-      return { error: `Ya existe un cliente con el DNI ${datos.dni}.` };
-    }
-    if (this.usuarios().some((u) => u.usuario === datos.dni)) {
-      return { error: `El usuario ${datos.dni} ya existe en el sistema.` };
-    }
-    const cliente: Cliente = {
-      id: Math.max(0, ...this.clientes().map((c) => c.id)) + 1,
-      dni: datos.dni,
-      nombres: datos.nombres.trim(),
-      correo: datos.correo.trim(),
-      telefono: datos.telefono,
-    };
-    this.clientes.update((lista) => [...lista, cliente]);
-
-    const acceso = { usuario: datos.dni, clave: this.claveTemporalCliente(datos.dni) };
-    this.usuarios.update((lista) => [
-      ...lista,
-      {
-        id: this.siguienteIdUsuario(),
-        nombre: cliente.nombres,
-        usuario: acceso.usuario,
-        clave: acceso.clave,
-        rol: 'CLIENTE',
-        activo: true,
-        clienteId: cliente.id,
-      },
-    ]);
-    return { cliente, acceso };
+  }): Observable<{ cliente: Cliente; acceso: AccesoCliente }> {
+    return this.http
+      .post<{ cliente: Cliente; acceso: AccesoCliente }>(`${this.api}/clientes`, datos)
+      .pipe(tap((respuesta) => this.clientes.update((lista) => [...lista, respuesta.cliente])));
   }
 
-  actualizarCliente(id: number, datos: { nombres: string; correo: string; telefono: string }): void {
-    const nombres = datos.nombres.trim();
-    this.clientes.update((lista) =>
-      lista.map((c) => (c.id === id ? { ...c, nombres, correo: datos.correo.trim(), telefono: datos.telefono } : c)),
-    );
-    this.usuarios.update((lista) =>
-      lista.map((u) => (u.rol === 'CLIENTE' && u.clienteId === id ? { ...u, nombre: nombres } : u)),
-    );
+  actualizarCliente(id: number, datos: { nombres: string; correo: string; telefono: string }): Observable<Cliente> {
+    return this.http
+      .put<Cliente>(`${this.api}/clientes/${id}`, datos)
+      .pipe(tap((cliente) => this.clientes.update((lista) => lista.map((c) => (c.id === id ? cliente : c)))));
   }
 
-  restablecerClaveCliente(clienteId: number): { usuario: string; clave: string } | undefined {
-    const acceso = this.accesoDeCliente(clienteId);
-    const cliente = this.cliente(clienteId);
-    if (!acceso || !cliente) {
-      return undefined;
-    }
-    const clave = this.claveTemporalCliente(cliente.dni);
-    this.usuarios.update((lista) => lista.map((u) => (u.id === acceso.id ? { ...u, clave } : u)));
-    return { usuario: acceso.usuario, clave };
+  restablecerClaveCliente(clienteId: number): Observable<AccesoCliente> {
+    return this.http.post<AccesoCliente>(`${this.api}/clientes/${clienteId}/restablecer-clave`, {});
   }
 
 
@@ -368,7 +298,6 @@ export class DatosService {
     });
   }
 
-  
   enviarPresupuesto(ordenId: number, diagnostico: string, monto: number, responsable: string): void {
     this.actualizar(ordenId, (o) => {
       o.diagnostico = diagnostico;

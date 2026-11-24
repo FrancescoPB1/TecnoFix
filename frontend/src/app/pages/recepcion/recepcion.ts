@@ -5,6 +5,7 @@ import { DatosService } from '../../services/datos.service';
 import { AuthService } from '../../services/auth.service';
 import { Cliente } from '../../models/modelos';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
+import { mensajeDeError } from '../../utils/errores';
 
 @Component({
   selector: 'app-recepcion',
@@ -39,9 +40,14 @@ export class Recepcion {
     if (!/^[0-9]{8}$/.test(this.dni)) {
       return;
     }
-    this.clienteEncontrado.set(this.datos.buscarClientePorDni(this.dni) ?? null);
-    this.busquedaHecha.set(true);
     this.error.set('');
+    this.datos.buscarClientePorDni(this.dni).subscribe({
+      next: (cliente) => {
+        this.clienteEncontrado.set(cliente);
+        this.busquedaHecha.set(true);
+      },
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 
   garantia(): { vigente: boolean; texto: string } | null {
@@ -75,27 +81,26 @@ export class Recepcion {
       return;
     }
 
-    const resultado = this.datos.registrarRecepcion(
-      this.dni,
-      this.clienteEncontrado() ? null : this.nuevoCliente,
-      {
+    const datosCliente = this.clienteEncontrado() ? {} : this.nuevoCliente;
+
+    this.datos
+      .registrarRecepcion({
+        dni: this.dni,
+        ...datosCliente,
         tipoId: this.equipo.tipoId!,
         modelo: this.equipo.modelo,
         serie: this.equipo.serie,
         fechaCompra: this.equipo.fechaCompra,
-      },
-      this.falla,
-      this.accesorios,
-      this.auth.usuario()!.nombre,
-      this.auth.usuario()!.sedeId!,
-    );
-
-    if (resultado.error) {
-      this.error.set(resultado.error);
-      return;
-    }
-    this.codigoCreado.set(resultado.orden!.codigo);
-    this.accesoCliente.set(resultado.accesoCliente ?? null);
+        falla: this.falla,
+        accesorios: this.accesorios,
+      })
+      .subscribe({
+        next: (resultado) => {
+          this.codigoCreado.set(resultado.orden.codigo);
+          this.accesoCliente.set(resultado.accesoCliente);
+        },
+        error: (e) => this.error.set(mensajeDeError(e)),
+      });
   }
 
   irAlPanel(): void {

@@ -17,6 +17,9 @@
 </div>
 
 <app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
+@if (!mostrarFormulario()) {
+  <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+}
 
 @if (mostrarFormulario()) {
   <div class="card mb-3">

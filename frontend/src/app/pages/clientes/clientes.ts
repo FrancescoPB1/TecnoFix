@@ -5,11 +5,9 @@ import { AuthService } from '../../services/auth.service';
 import { Cliente } from '../../models/modelos';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
 import { ConfirmarDialogo } from '../../shared/confirmar-dialogo/confirmar-dialogo';
+import { mensajeDeError } from '../../utils/errores';
 
-/**
- * Clientes registrados. Recepción los registra y corrige sus datos; el administrador solo los consulta.
- * Al registrar un cliente se crea su acceso (usuario = DNI y una clave temporal).
- */
+
 @Component({
   selector: 'app-clientes',
   imports: [FormsModule, MensajeFeedback, ConfirmarDialogo],
@@ -19,7 +17,6 @@ export class Clientes {
   readonly datos = inject(DatosService);
   private auth = inject(AuthService);
 
-  // Solo recepción registra y modifica clientes.
   readonly esRecepcion = this.auth.usuario()?.rol === 'RECEPCION';
 
   readonly texto = signal('');
@@ -75,19 +72,24 @@ export class Clientes {
     }
     const id = this.editandoId();
     if (id !== null) {
-      this.datos.actualizarCliente(id, this.form);
-      this.mensaje.set(`Datos de ${this.form.nombres.trim()} actualizados.`);
+      this.datos.actualizarCliente(id, this.form).subscribe({
+        next: (cliente) => {
+          this.mensaje.set(`Datos de ${cliente.nombres} actualizados.`);
+          this.mostrarFormulario.set(false);
+        },
+        error: (e) => this.error.set(mensajeDeError(e)),
+      });
     } else {
-      const resultado = this.datos.crearCliente(this.form);
-      if (resultado.error) {
-        this.error.set(resultado.error);
-        return;
-      }
-      this.mensaje.set(
-        `Cliente registrado. Entréguele su acceso: usuario ${resultado.acceso!.usuario} y clave temporal ${resultado.acceso!.clave}.`,
-      );
+      this.datos.crearCliente(this.form).subscribe({
+        next: (resultado) => {
+          this.mensaje.set(
+            `Cliente registrado. Entréguele su acceso: usuario ${resultado.acceso.usuario} y clave temporal ${resultado.acceso.clave}.`,
+          );
+          this.mostrarFormulario.set(false);
+        },
+        error: (e) => this.error.set(mensajeDeError(e)),
+      });
     }
-    this.mostrarFormulario.set(false);
   }
 
   pedirRestablecer(cliente: Cliente): void {
@@ -100,11 +102,14 @@ export class Clientes {
     if (!cliente) {
       return;
     }
-    const acceso = this.datos.restablecerClaveCliente(cliente.id);
-    if (acceso) {
-      this.mensaje.set(
-        `Clave restablecida para ${cliente.nombres}: usuario ${acceso.usuario} y clave temporal ${acceso.clave}.`,
-      );
-    }
+    this.mensaje.set('');
+    this.error.set('');
+    this.datos.restablecerClaveCliente(cliente.id).subscribe({
+      next: (acceso) =>
+        this.mensaje.set(
+          `Clave restablecida para ${cliente.nombres}: usuario ${acceso.usuario} y clave temporal ${acceso.clave}.`,
+        ),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 }
