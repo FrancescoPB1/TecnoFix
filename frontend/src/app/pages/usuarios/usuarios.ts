@@ -4,6 +4,7 @@ import { DatosService } from '../../services/datos.service';
 import { AuthService } from '../../services/auth.service';
 import { ETIQUETA_ROL, Rol, Sede, Usuario } from '../../models/modelos';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
+import { mensajeDeError } from '../../utils/errores';
 
 @Component({
   selector: 'app-usuarios',
@@ -78,30 +79,35 @@ export class Usuarios {
       return;
     }
     const id = this.editandoId();
+    const nombre = this.nuevo.nombre.trim();
     if (id !== null) {
-      const cambio = this.datos.actualizarPersonal(id, this.nuevo);
-      if (cambio.error) {
-        this.error.set(cambio.error);
-        return;
-      }
-      this.mensaje.set(`Datos de ${this.nuevo.nombre.trim()} actualizados.`);
+      this.datos.actualizarPersonal(id, this.nuevo).subscribe({
+        next: () => {
+          this.mensaje.set(`Datos de ${nombre} actualizados.`);
+          this.mostrarFormulario.set(false);
+        },
+        error: (e) => this.error.set(mensajeDeError(e)),
+      });
     } else {
-      const resultado = this.datos.registrarPersonal(this.nuevo);
-      if (resultado.error) {
-        this.error.set(resultado.error);
-        return;
-      }
-      this.mensaje.set(
-        `Usuario ${this.nuevo.usuario} creado (${ETIQUETA_ROL[this.nuevo.rol]}). Entregue el usuario y la clave temporal a la persona.`,
-      );
+      this.datos.registrarPersonal(this.nuevo).subscribe({
+        next: (creado) => {
+          this.mensaje.set(
+            `Usuario ${creado.usuario} creado (${ETIQUETA_ROL[creado.rol]}). Entregue el usuario y la clave temporal a la persona.`,
+          );
+          this.mostrarFormulario.set(false);
+        },
+        error: (e) => this.error.set(mensajeDeError(e)),
+      });
     }
-    this.mostrarFormulario.set(false);
   }
 
   cambiarEstado(usuario: Usuario): void {
-    this.datos.cambiarEstadoUsuario(usuario.id);
-    this.mensaje.set(
-      `La cuenta de ${usuario.nombre} quedó ${usuario.activo ? 'inactiva' : 'activa'}.`,
-    );
+    this.mensaje.set('');
+    this.error.set('');
+    this.datos.cambiarEstadoUsuario(usuario.id).subscribe({
+      next: (actualizado) =>
+        this.mensaje.set(`La cuenta de ${actualizado.nombre} quedó ${actualizado.activo ? 'activa' : 'inactiva'}.`),
+      error: (e) => this.error.set(mensajeDeError(e)),
+    });
   }
 }

@@ -37,7 +37,7 @@ export class DatosService {
   readonly cargado = signal(false);
   readonly errorCarga = signal('');
 
-
+  
   cargarInicial(rol: Rol): Observable<boolean> {
     if (this.cargado()) {
       return of(true);
@@ -162,7 +162,7 @@ export class DatosService {
     return hoy <= this.finGarantia(fechaCompra);
   }
 
-
+ 
   registrarRecepcion(
     dni: string,
     nuevoCliente: { nombres: string; correo: string; telefono: string } | null,
@@ -327,29 +327,10 @@ export class DatosService {
     especialidad: string;
     usuario: string;
     clave: string;
-  }): { error?: string } {
-    const usuario = datos.usuario.trim();
-    if (this.usuarios().some((u) => u.usuario.toLowerCase() === usuario.toLowerCase())) {
-      return { error: `El usuario ${usuario} ya existe.` };
-    }
-    if (this.personal().some((u) => u.dni === datos.dni)) {
-      return { error: 'Ya hay una persona del personal registrada con ese DNI.' };
-    }
-    const nuevo: Usuario = {
-      id: this.siguienteIdUsuario(),
-      nombre: datos.nombre.trim(),
-      usuario,
-      clave: datos.clave,
-      rol: datos.rol,
-      activo: true,
-      sedeId: datos.rol === 'ADMIN' ? undefined : (datos.sedeId ?? undefined),
-      dni: datos.dni,
-      telefono: datos.telefono,
-      correo: datos.correo.trim(),
-      especialidad: datos.rol === 'TECNICO' ? datos.especialidad.trim() : undefined,
-    };
-    this.usuarios.update((lista) => [...lista, nuevo]);
-    return {};
+  }): Observable<Usuario> {
+    return this.http
+      .post<Usuario>(`${this.api}/usuarios`, datos)
+      .pipe(tap((usuario) => this.usuarios.update((lista) => [...lista, usuario])));
   }
 
   actualizarPersonal(
@@ -363,31 +344,16 @@ export class DatosService {
       especialidad: string;
       clave: string;
     },
-  ): { error?: string } {
-    if (this.personal().some((u) => u.id !== id && u.dni === datos.dni)) {
-      return { error: 'Ya hay una persona del personal registrada con ese DNI.' };
-    }
-    this.usuarios.update((lista) =>
-      lista.map((u) =>
-        u.id !== id
-          ? u
-          : {
-              ...u,
-              sedeId: u.rol === 'ADMIN' ? undefined : (datos.sedeId ?? undefined),
-              nombre: datos.nombre.trim(),
-              dni: datos.dni,
-              telefono: datos.telefono,
-              correo: datos.correo.trim(),
-              especialidad: u.rol === 'TECNICO' ? datos.especialidad.trim() : undefined,
-              clave: datos.clave ? datos.clave : u.clave,
-            },
-      ),
-    );
-    return {};
+  ): Observable<Usuario> {
+    return this.http
+      .put<Usuario>(`${this.api}/usuarios/${id}`, datos)
+      .pipe(tap((usuario) => this.usuarios.update((lista) => lista.map((u) => (u.id === id ? usuario : u)))));
   }
 
-  cambiarEstadoUsuario(id: number): void {
-    this.usuarios.update((lista) => lista.map((u) => (u.id === id ? { ...u, activo: !u.activo } : u)));
+  cambiarEstadoUsuario(id: number): Observable<Usuario> {
+    return this.http
+      .patch<Usuario>(`${this.api}/usuarios/${id}/estado`, {})
+      .pipe(tap((usuario) => this.usuarios.update((lista) => lista.map((u) => (u.id === id ? usuario : u)))));
   }
 
 
@@ -402,7 +368,7 @@ export class DatosService {
     });
   }
 
- 
+  
   enviarPresupuesto(ordenId: number, diagnostico: string, monto: number, responsable: string): void {
     this.actualizar(ordenId, (o) => {
       o.diagnostico = diagnostico;
