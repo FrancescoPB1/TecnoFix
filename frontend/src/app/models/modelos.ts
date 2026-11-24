@@ -1,5 +1,4 @@
-// Modelos de datos del prototipo TecnoFix.
-
+// Modelos de datos de TecnoFix (corresponden al JSON que devuelve la API).
 export type Rol = 'ADMIN' | 'RECEPCION' | 'TECNICO' | 'CLIENTE';
 
 export const ETIQUETA_ROL: Record<Rol, string> = {
@@ -32,7 +31,6 @@ export interface Usuario {
   id: number;
   nombre: string;
   usuario: string;
-  clave?: string;
   rol: Rol;
   activo: boolean;
   clienteId?: number;
