@@ -21,7 +21,6 @@ export class TecnicoReparacion {
   private id = Number(this.route.snapshot.paramMap.get('id'));
   readonly orden = computed(() => this.datos.obtenerOrden(this.id));
 
-  // Estos campos describen UN avance: al guardarlo se agrega al historial y los campos quedan vacíos.
   actividad = '';
   repuestos = '';
   pruebas = '';
@@ -29,7 +28,6 @@ export class TecnicoReparacion {
   readonly mensaje = signal('');
   readonly error = signal('');
   readonly terminado = signal(false);
-  // Controlan cuándo se muestran los avisos de campos obligatorios.
   readonly faltaActividad = signal(false);
   readonly faltaPruebas = signal(false);
 
@@ -46,7 +44,6 @@ export class TecnicoReparacion {
     this.faltaPruebas.set(false);
   }
 
-  /** Guarda un avance sin terminar: la actividad es obligatoria, lo demás es opcional. */
   guardar(): void {
     this.mensaje.set('');
     this.error.set('');
@@ -64,7 +61,6 @@ export class TecnicoReparacion {
     });
   }
 
-  /** El último avance deja la orden lista: además de la actividad se exigen las pruebas de funcionamiento. */
   marcarListo(): void {
     this.mensaje.set('');
     this.error.set('');
