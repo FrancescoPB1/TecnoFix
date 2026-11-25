@@ -49,8 +49,8 @@ La API crea estas cuentas al iniciar con la base vacía. Todas usan la clave `de
 
 | Carpeta | Contenido |
 | --- | --- |
-| `pages/` | Una pantalla por componente (login, panel de órdenes, recepción, entrega, clientes, usuarios, sedes, tipos, técnico y cliente) |
-| `shared/` | Componentes reutilizables (layout, mensajes, diálogo de confirmación, estado de la orden) |
+| `pages/` | Una pantalla por componente (login, panel de órdenes, detalle de la orden, recepción, entrega, clientes, usuarios, sedes, tipos, técnico y cliente) |
+| `shared/` | Componentes reutilizables (layout, mensajes, diálogo de confirmación, estado de la orden, lista de avances de reparación) |
 | `services/` | `AuthService` (inicio de sesión y token), `DatosService` (datos y operaciones contra la API) y `CargaService` |
 | `interceptors/` | `jwt.interceptor` (agrega el token y cierra la sesión si vence) y `carga.interceptor` |
 | `guards/` | Guards de rutas por sesión y por rol |
@@ -66,6 +66,16 @@ La API crea estas cuentas al iniciar con la base vacía. Todas usan la clave `de
 - Cada operación que modifica datos llama a la API y, si responde bien, actualiza los signals
   con lo que devolvió el servidor. Si responde con error, la pantalla muestra el mensaje de la API.
 - Si la API responde 401 (token vencido), se cierra la sesión y se vuelve al login.
+
+## Seguimiento de la reparación
+
+- Cada vez que el técnico presiona **Guardar avance**, la API agrega un registro (actividad, repuestos, pruebas, fecha y técnico)
+  al historial de avances de la orden y los campos del formulario se limpian.
+- El administrador y recepción abren **Ver detalle** desde el panel para revisar todo lo registrado; el cliente ve los mismos
+  avances en su pantalla de seguimiento.
+- Los accesorios se registran uno por uno en la recepción. En la entrega la lista no se puede modificar: solo se marca
+  cuáles se devuelven y, si alguno queda sin devolver, es obligatorio explicar el motivo en las observaciones.
+- En la entrega, la casilla **Lo recibe el mismo titular** completa el receptor con el nombre del cliente.
 
 ## Comandos útiles
 
