@@ -1,0 +1,22 @@
+@if (avances.length === 0) {
+  <p class="text-muted mb-0">Todavía no hay avances de reparación registrados.</p>
+} @else {
+  <ol class="list-group list-group-numbered list-group-flush">
+    @for (a of avances; track a.id) {
+      <li class="list-group-item">
+        <div class="ms-2">
+          <div class="d-flex justify-content-between flex-wrap gap-1">
+            <strong>{{ a.actividad }}</strong>
+            <small class="text-muted">{{ a.fecha | date: 'dd/MM/yyyy HH:mm' }} · {{ a.tecnico }}</small>
+          </div>
+          @if (a.repuestos) {
+            <div class="small"><span class="text-muted">Repuestos:</span> {{ a.repuestos }}</div>
+          }
+          @if (a.pruebas) {
+            <div class="small"><span class="text-muted">Pruebas:</span> {{ a.pruebas }}</div>
+          }
+        </div>
+      </li>
+    }
+  </ol>
+}

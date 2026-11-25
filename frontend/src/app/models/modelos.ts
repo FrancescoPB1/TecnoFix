@@ -105,10 +105,16 @@ export interface Orden {
   diagnostico?: string;
   montoPresupuesto?: number;
   decision?: 'APROBADO' | 'RECHAZADO';
-  actividad?: string;
-  repuestos?: string;
-  pruebas?: string;
+  avances: AvanceReparacion[];
   receptor?: string;
   observacionesEntrega?: string;
   historial: MovimientoOrden[];
+}
+export interface AvanceReparacion {
+  id: number;
+  fecha: string;
+  tecnico: string;
+  actividad: string;
+  repuestos?: string;
+  pruebas?: string;
 }

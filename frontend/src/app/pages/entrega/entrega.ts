@@ -5,12 +5,13 @@ import { DatosService } from '../../services/datos.service';
 import { AuthService } from '../../services/auth.service';
 import { EstadoBadge } from '../../shared/estado-badge/estado-badge';
 import { ConfirmarDialogo } from '../../shared/confirmar-dialogo/confirmar-dialogo';
+import { ListaAvances } from '../../shared/lista-avances/lista-avances';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
 import { mensajeDeError } from '../../utils/errores';
 
 @Component({
   selector: 'app-entrega',
-  imports: [FormsModule, RouterLink, EstadoBadge, ConfirmarDialogo, MensajeFeedback],
+  imports: [FormsModule, RouterLink, EstadoBadge, ConfirmarDialogo, ListaAvances, MensajeFeedback],
   templateUrl: './entrega.html',
 })
 export class Entrega {

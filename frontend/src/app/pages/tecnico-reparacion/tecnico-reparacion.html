@@ -17,15 +17,24 @@
       </div>
       <p class="mb-1"><strong>Técnico responsable:</strong> {{ orden()!.tecnicoNombre }}</p>
       <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}</p>
+      <p class="mb-1"><strong>Diagnóstico:</strong> {{ orden()!.diagnostico }}</p>
       <p class="mb-0"><strong>Presupuesto aprobado:</strong> S/ {{ orden()!.montoPresupuesto?.toFixed(2) }}</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Avances registrados ({{ orden()!.avances.length }})</div>
+    <div class="card-body p-0">
+      <app-lista-avances [avances]="orden()!.avances" />
     </div>
   </div>
 
   <app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
   <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
 
-  <form #f="ngForm" (ngSubmit)="marcarListo(f)" novalidate>
+  <form (ngSubmit)="marcarListo()" novalidate>
     <div class="card mb-3">
+      <div class="card-header">Nuevo avance</div>
       <div class="card-body row g-3">
         <div class="col-12">
           <label for="actividad" class="form-label">Actividad realizada</label>
@@ -33,30 +42,34 @@
             id="actividad"
             name="actividad"
             rows="3"
+            maxlength="500"
             class="form-control"
-            [class.is-invalid]="a.invalid && (a.touched || f.submitted)"
+            [class.is-invalid]="faltaActividad() && !actividad.trim()"
             [(ngModel)]="actividad"
-            #a="ngModel"
-            required
           ></textarea>
           <div class="invalid-feedback">Describa la actividad realizada.</div>
         </div>
         <div class="col-12 col-md-6">
           <label for="repuestos" class="form-label">Repuestos utilizados</label>
-          <input id="repuestos" name="repuestos" class="form-control" placeholder="Detalle y costo" [(ngModel)]="repuestos" />
+          <input id="repuestos" name="repuestos" maxlength="300" class="form-control" placeholder="Detalle y costo" [(ngModel)]="repuestos" />
         </div>
         <div class="col-12 col-md-6">
           <label for="pruebas" class="form-label">Pruebas y resultado</label>
           <input
             id="pruebas"
             name="pruebas"
+            maxlength="500"
             class="form-control"
-            [class.is-invalid]="p.invalid && (p.touched || f.submitted)"
+            [class.is-invalid]="faltaPruebas() && !pruebas.trim()"
             [(ngModel)]="pruebas"
-            #p="ngModel"
-            required
           />
-          <div class="invalid-feedback">Registre las pruebas de funcionamiento.</div>
+          <div class="invalid-feedback">Para dejar la orden lista registre las pruebas de funcionamiento.</div>
+        </div>
+        <div class="col-12">
+          <small class="text-muted">
+            "Guardar avance" agrega este registro al historial y limpia los campos para el siguiente.
+            "Listo para entrega" registra este último avance (con sus pruebas) y cierra la reparación.
+          </small>
         </div>
       </div>
     </div>
