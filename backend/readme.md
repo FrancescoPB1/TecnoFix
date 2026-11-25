@@ -98,6 +98,11 @@ Los errores responden JSON con la forma `{ "estado": 409, "error": "Conflict", "
 | PATCH | `/api/ordenes/{id}/reparacion` | Técnico | 200, 400, 403, 404, 409 |
 | PATCH | `/api/ordenes/{id}/entrega` | Recepción | 200, 400, 403, 404, 409 |
 
+Detalles del seguimiento de la orden:
+
+- **Accesorios:** la recepción envía una lista (`"accesorios": ["Cargador", "Funda"]`, máximo 10) y cada uno se guarda como un registro con la marca `devuelto`. En la entrega se envían los ids de los que se devuelven (`"devueltos": [3, 4]`); si alguno queda sin devolver, `observaciones` es obligatoria. Con `"titular": true` el receptor es el nombre del cliente.
+- **Avances de reparación:** cada `PATCH .../reparacion` agrega un registro (actividad, repuestos, pruebas, fecha y técnico) a la lista `avances` de la orden; no reemplaza al anterior. Para dejar la orden lista (`"terminada": true`) las pruebas son obligatorias.
+
 ## Pruebas con Postman
 
 1. Con el backend levantado, abre Postman y usa **Import** con el archivo `postman/TecnoFix.postman_collection.json`.

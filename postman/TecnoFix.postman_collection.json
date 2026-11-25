@@ -2068,6 +2068,9 @@
                   "pm.test(\"Responde 201\", function () { pm.response.to.have.status(201); });",
                   "pm.test(\"Estado RECIBIDO, sin garantia y en la sede 1\", function () { var j = pm.response.json(); pm.expect(!!(j.orden.estado === \"RECIBIDO\" && j.orden.enGarantia === false && j.orden.sedeId === 1)).to.be.true; });",
                   "pm.test(\"Codigo con formato ST-0000\", function () { var j = pm.response.json(); pm.expect(!!(/^ST-[0-9]{4}$/.test(j.orden.codigo))).to.be.true; });",
+                  "pm.test(\"Guarda los 2 accesorios como registros sin devolver\", function () { var j = pm.response.json(); pm.expect(!!(j.orden.accesorios.length === 2 && j.orden.accesorios[0].nombre === \"Cargador\" && j.orden.accesorios[0].devuelto === false)).to.be.true; });",
+                  "pm.collectionVariables.set(\"accesorio1Id\", String(pm.response.json().orden.accesorios[0].id));",
+                  "pm.collectionVariables.set(\"accesorio2Id\", String(pm.response.json().orden.accesorios[1].id));",
                   "pm.test(\"Devuelve el acceso del cliente nuevo\", function () { var j = pm.response.json(); pm.expect(!!(j.accesoCliente && j.accesoCliente.clave.indexOf(\"tf\") === 0)).to.be.true; });",
                   "pm.collectionVariables.set(\"ordenId\", String(pm.response.json().orden.id));",
                   "pm.collectionVariables.set(\"claveClienteNuevo\", String(pm.response.json().accesoCliente.clave));"
@@ -2106,7 +2109,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"dni\": \"{{dniOrden}}\",\n  \"nombres\": \"Rosa Medina Paz\",\n  \"correo\": \"rosa.medina@correo.com\",\n  \"telefono\": \"955112233\",\n  \"tipoId\": 1,\n  \"modelo\": \"Galaxy S21\",\n  \"serie\": \"{{serieA}}\",\n  \"fechaCompra\": \"{{fechaVieja}}\",\n  \"falla\": \"No enciende despues de una caida.\",\n  \"accesorios\": \"Cargador\"\n}",
+              "raw": "{\n  \"dni\": \"{{dniOrden}}\",\n  \"nombres\": \"Rosa Medina Paz\",\n  \"correo\": \"rosa.medina@correo.com\",\n  \"telefono\": \"955112233\",\n  \"tipoId\": 1,\n  \"modelo\": \"Galaxy S21\",\n  \"serie\": \"{{serieA}}\",\n  \"fechaCompra\": \"{{fechaVieja}}\",\n  \"falla\": \"No enciende despues de una caida.\",\n  \"accesorios\": [\n    \"Cargador\",\n    \"Funda negra\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2160,7 +2163,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"dni\": \"{{dniOrden}}\",\n  \"nombres\": \"Rosa Medina Paz\",\n  \"correo\": \"rosa.medina@correo.com\",\n  \"telefono\": \"955112233\",\n  \"tipoId\": 1,\n  \"modelo\": \"Galaxy S21\",\n  \"serie\": \"{{serieA}}\",\n  \"fechaCompra\": \"{{fechaVieja}}\",\n  \"falla\": \"No enciende despues de una caida.\",\n  \"accesorios\": \"Cargador\"\n}",
+              "raw": "{\n  \"dni\": \"{{dniOrden}}\",\n  \"nombres\": \"Rosa Medina Paz\",\n  \"correo\": \"rosa.medina@correo.com\",\n  \"telefono\": \"955112233\",\n  \"tipoId\": 1,\n  \"modelo\": \"Galaxy S21\",\n  \"serie\": \"{{serieA}}\",\n  \"fechaCompra\": \"{{fechaVieja}}\",\n  \"falla\": \"No enciende despues de una caida.\",\n  \"accesorios\": [\n    \"Cargador\",\n    \"Funda negra\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2277,6 +2280,60 @@
           }
         },
         {
+          "name": "Recepcion con mas de 10 accesorios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Indica el campo accesorios\", function () { var j = pm.response.json(); pm.expect(!!(j.detalles.accesorios)).to.be.true; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordenes/recepcion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordenes",
+                "recepcion"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenRecepcion}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dni\": \"{{dniOrden}}\",\n  \"nombres\": \"Rosa Medina Paz\",\n  \"correo\": \"rosa.medina@correo.com\",\n  \"telefono\": \"955112233\",\n  \"tipoId\": 1,\n  \"modelo\": \"Galaxy S21\",\n  \"serie\": \"SN-ACC-001\",\n  \"fechaCompra\": \"{{fechaVieja}}\",\n  \"falla\": \"No enciende despues de una caida.\",\n  \"accesorios\": [\n    \"a1\",\n    \"a2\",\n    \"a3\",\n    \"a4\",\n    \"a5\",\n    \"a6\",\n    \"a7\",\n    \"a8\",\n    \"a9\",\n    \"a10\",\n    \"a11\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
           "name": "Recepcion con rol no permitido (tecnico)",
           "event": [
             {
@@ -2320,7 +2377,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"dni\": \"{{dniOrden}}\",\n  \"nombres\": \"Rosa Medina Paz\",\n  \"correo\": \"rosa.medina@correo.com\",\n  \"telefono\": \"955112233\",\n  \"tipoId\": 1,\n  \"modelo\": \"Galaxy S21\",\n  \"serie\": \"{{serieA}}\",\n  \"fechaCompra\": \"{{fechaVieja}}\",\n  \"falla\": \"No enciende despues de una caida.\",\n  \"accesorios\": \"Cargador\"\n}",
+              "raw": "{\n  \"dni\": \"{{dniOrden}}\",\n  \"nombres\": \"Rosa Medina Paz\",\n  \"correo\": \"rosa.medina@correo.com\",\n  \"telefono\": \"955112233\",\n  \"tipoId\": 1,\n  \"modelo\": \"Galaxy S21\",\n  \"serie\": \"{{serieA}}\",\n  \"fechaCompra\": \"{{fechaVieja}}\",\n  \"falla\": \"No enciende despues de una caida.\",\n  \"accesorios\": [\n    \"Cargador\",\n    \"Funda negra\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2921,7 +2978,7 @@
           }
         },
         {
-          "name": "Reparacion terminada",
+          "name": "Registrar un avance de reparacion (sin terminar)",
           "event": [
             {
               "listen": "test",
@@ -2929,7 +2986,63 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", function () { pm.response.to.have.status(200); });",
-                  "pm.test(\"Pasa a LISTO_PARA_ENTREGA\", function () { var j = pm.response.json(); pm.expect(!!(j.estado === \"LISTO_PARA_ENTREGA\")).to.be.true; });"
+                  "pm.test(\"Sigue EN_REPARACION con 1 avance\", function () { var j = pm.response.json(); pm.expect(!!(j.estado === \"EN_REPARACION\" && j.avances.length === 1 && j.avances[0].tecnico.length > 0)).to.be.true; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordenes/{{ordenId}}/reparacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordenes",
+                "{{ordenId}}",
+                "reparacion"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenTecnico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"actividad\": \"Se desarmo el equipo y se retiro la placa danada.\",\n  \"repuestos\": \"\",\n  \"pruebas\": \"\",\n  \"terminada\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reparacion terminada (agrega otro avance)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Pasa a LISTO_PARA_ENTREGA con 2 avances\", function () { var j = pm.response.json(); pm.expect(!!(j.estado === \"LISTO_PARA_ENTREGA\" && j.avances.length === 2)).to.be.true; });",
+                  "pm.test(\"El ultimo avance guarda las pruebas\", function () { var j = pm.response.json(); pm.expect(!!(j.avances[1].pruebas.indexOf(\"Enciende\") === 0)).to.be.true; });"
                 ]
               }
             }
@@ -2972,6 +3085,46 @@
                   "language": "json"
                 }
               }
+            }
+          }
+        },
+        {
+          "name": "El cliente ve los avances de su orden",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Ve 2 avances con actividad y pruebas\", function () { var j = pm.response.json(); pm.expect(!!(j.avances.length === 2 && j.avances[0].actividad.length > 0 && j.avances[1].pruebas.length > 0)).to.be.true; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordenes/{{ordenId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordenes",
+                "{{ordenId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenClienteNuevo}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -3020,7 +3173,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"receptor\": \"Rosa Medina Paz\",\n  \"accesoriosDevueltos\": \"Cargador\",\n  \"observaciones\": \"\"\n}",
+              "raw": "{\n  \"receptor\": \"Rosa Medina Paz\",\n  \"titular\": false,\n  \"devueltos\": [],\n  \"observaciones\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3030,15 +3183,14 @@
           }
         },
         {
-          "name": "Entrega del equipo",
+          "name": "Entrega con receptor demasiado corto",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Responde 200\", function () { pm.response.to.have.status(200); });",
-                  "pm.test(\"Queda ENTREGADO\", function () { var j = pm.response.json(); pm.expect(!!(j.estado === \"ENTREGADO\" && j.receptor === \"Rosa Medina Paz\")).to.be.true; });"
+                  "pm.test(\"Responde 409\", function () { pm.response.to.have.status(409); });"
                 ]
               }
             }
@@ -3075,7 +3227,172 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"receptor\": \"Rosa Medina Paz\",\n  \"accesoriosDevueltos\": \"Cargador\",\n  \"observaciones\": \"Sin novedades.\"\n}",
+              "raw": "{\n  \"receptor\": \"Ro\",\n  \"titular\": false,\n  \"devueltos\": [],\n  \"observaciones\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Entrega con un accesorio sin devolver y sin observaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Pide explicar el motivo\", function () { var j = pm.response.json(); pm.expect(!!(j.mensaje.indexOf(\"sin devolver\") >= 0)).to.be.true; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordenes/{{ordenId}}/entrega",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordenes",
+                "{{ordenId}}",
+                "entrega"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenRecepcion}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titular\": true,\n  \"devueltos\": [\n    {{accesorio1Id}}\n  ],\n  \"observaciones\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Entrega con un accesorio que no pertenece a la orden",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordenes/{{ordenId}}/entrega",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordenes",
+                "{{ordenId}}",
+                "entrega"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenRecepcion}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titular\": true,\n  \"devueltos\": [\n    {{accesorio1Id}},\n    999999\n  ],\n  \"observaciones\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Entrega del equipo al titular",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Queda ENTREGADO y el receptor es el titular\", function () { var j = pm.response.json(); pm.expect(!!(j.estado === \"ENTREGADO\" && j.receptor === \"Rosa Medina Paz\")).to.be.true; });",
+                  "pm.test(\"Solo el cargador figura como devuelto\", function () { var j = pm.response.json(); pm.expect(!!(j.accesorios[0].devuelto === true && j.accesorios[1].devuelto === false)).to.be.true; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordenes/{{ordenId}}/entrega",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordenes",
+                "{{ordenId}}",
+                "entrega"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenRecepcion}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titular\": true,\n  \"devueltos\": [\n    {{accesorio1Id}}\n  ],\n  \"observaciones\": \"La funda no se devolvio porque el cliente la dejo en su tienda.\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3175,7 +3492,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"dni\": \"{{dniOrden}}\",\n  \"tipoId\": 4,\n  \"modelo\": \"Galaxy Book4\",\n  \"serie\": \"{{serieB}}\",\n  \"fechaCompra\": \"{{fechaReciente}}\",\n  \"falla\": \"Se apaga solo al abrir programas pesados.\",\n  \"accesorios\": \"\"\n}",
+              "raw": "{\n  \"dni\": \"{{dniOrden}}\",\n  \"tipoId\": 4,\n  \"modelo\": \"Galaxy Book4\",\n  \"serie\": \"{{serieB}}\",\n  \"fechaCompra\": \"{{fechaReciente}}\",\n  \"falla\": \"Se apaga solo al abrir programas pesados.\",\n  \"accesorios\": []\n}",
               "options": {
                 "raw": {
                   "language": "json"
