@@ -81,6 +81,12 @@ export interface MovimientoOrden {
   detalle: string;
 }
 
+export interface AccesorioOrden {
+  id: number;
+  nombre: string;
+  devuelto: boolean;
+}
+
 export interface Orden {
   id: number;
   codigo: string;
@@ -94,7 +100,7 @@ export interface Orden {
   equipo?: Equipo;
   enGarantia: boolean;
   falla: string;
-  accesorios: string;
+  accesorios: AccesorioOrden[];
   estado: EstadoOrden;
   diagnostico?: string;
   montoPresupuesto?: number;
@@ -103,7 +109,6 @@ export interface Orden {
   repuestos?: string;
   pruebas?: string;
   receptor?: string;
-  accesoriosDevueltos?: string;
   observacionesEntrega?: string;
   historial: MovimientoOrden[];
 }

@@ -171,7 +171,7 @@ export class DatosService {
     serie: string;
     fechaCompra: string;
     falla: string;
-    accesorios: string;
+    accesorios: string[];
   }): Observable<{ orden: Orden; accesoCliente: AccesoCliente | null }> {
     return this.http
       .post<{ orden: Orden; accesoCliente: AccesoCliente | null }>(`${this.api}/ordenes/recepcion`, datos)
@@ -206,7 +206,6 @@ export class DatosService {
       .pipe(tap((respuesta) => this.clientes.update((lista) => [...lista, respuesta.cliente])));
   }
 
-  /** Recepción corrige los datos de contacto del cliente (el DNI no se modifica porque es su usuario). */
   actualizarCliente(id: number, datos: { nombres: string; correo: string; telefono: string }): Observable<Cliente> {
     return this.http
       .put<Cliente>(`${this.api}/clientes/${id}`, datos)
@@ -324,11 +323,12 @@ export class DatosService {
   confirmarEntrega(
     ordenId: number,
     receptor: string,
-    accesoriosDevueltos: string,
+    titular: boolean,
+    devueltos: number[],
     observaciones: string,
   ): Observable<Orden> {
     return this.http
-      .patch<Orden>(`${this.api}/ordenes/${ordenId}/entrega`, { receptor, accesoriosDevueltos, observaciones })
+      .patch<Orden>(`${this.api}/ordenes/${ordenId}/entrega`, { receptor, titular, devueltos, observaciones })
       .pipe(tap((orden) => this.guardarOrden(orden)));
   }
 

@@ -23,13 +23,10 @@
         <h2 class="h5 mb-0">Orden {{ orden()!.codigo }}</h2>
         <app-estado-badge [estado]="orden()!.estado" />
       </div>
-      <p class="mb-1"><strong>Cliente:</strong> {{ datos.cliente(orden()!.clienteId)?.nombres }}</p>
+      <p class="mb-1"><strong>Cliente:</strong> {{ nombreCliente() }}</p>
       <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}</p>
       <p class="mb-1"><strong>Falla reportada:</strong> {{ orden()!.falla }}</p>
-      @if (orden()!.actividad) {
-        <p class="mb-1"><strong>Intervención:</strong> {{ orden()!.actividad }}</p>
-        <p class="mb-0"><strong>Pruebas:</strong> {{ orden()!.pruebas }}</p>
-      } @else {
+      @if (orden()!.estado === 'DEVUELTO_SIN_REPARAR') {
         <p class="mb-0 text-muted">El cliente rechazó el presupuesto; el equipo se devuelve sin reparar.</p>
       }
     </div>
@@ -37,28 +34,94 @@
 
   <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
 
-  <form #f="ngForm" (ngSubmit)="pedirConfirmacion(f)" novalidate>    <div class="card mb-3">
+  <form #f="ngForm" (ngSubmit)="pedirConfirmacion(f)" novalidate>
+    <div class="card mb-3">
+      <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Accesorios recibidos en la recepción</span>
+        @if (orden()!.accesorios.length > 1) {
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="marcarTodos()">Marcar todos como devueltos</button>
+        }
+      </div>
+      @if (orden()!.accesorios.length === 0) {
+        <div class="card-body text-muted">El cliente no entregó accesorios con el equipo.</div>
+      } @else {
+        <ul class="list-group list-group-flush">
+          @for (a of orden()!.accesorios; track a.id) {
+            <li class="list-group-item">
+              <div class="form-check mb-0">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  [id]="'acc-' + a.id"
+                  [checked]="estaDevuelto(a.id)"
+                  (change)="alternarDevuelto(a.id, $any($event.target).checked)"
+                />
+                <label class="form-check-label" [for]="'acc-' + a.id">
+                  {{ a.nombre }}
+                  <span class="text-muted small">— {{ estaDevuelto(a.id) ? 'devuelto' : 'sin devolver' }}</span>
+                </label>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+      <div class="card-footer text-muted small">
+        La lista la registró recepción al recibir el equipo y no se puede modificar; aquí solo se marca lo que se devuelve.
+      </div>
+    </div>
+
+    <div class="card mb-3">
       <div class="card-body row g-3">
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="titular" name="titular" [(ngModel)]="titular" />
+            <label class="form-check-label" for="titular">Lo recibe el mismo titular ({{ nombreCliente() }})</label>
+          </div>
+        </div>
         <div class="col-12 col-md-6">
           <label for="receptor" class="form-label">Receptor (quien recoge el equipo)</label>
-          <input
-            id="receptor"
-            name="receptor"
-            class="form-control"
-            [class.is-invalid]="r.invalid && (r.touched || f.submitted)"
-            [(ngModel)]="receptor"
-            #r="ngModel"
-            required
-          />
-          <div class="invalid-feedback">Ingrese el nombre de quien recibe el equipo.</div>
-        </div>
-        <div class="col-12 col-md-6">
-          <label for="devueltos" class="form-label">Accesorios devueltos</label>
-          <input id="devueltos" name="devueltos" class="form-control" [(ngModel)]="accesoriosDevueltos" />
+          @if (titular) {
+            <input id="receptor" class="form-control" [value]="nombreCliente()" readonly aria-readonly="true" />
+          } @else {
+            <input
+              id="receptor"
+              name="receptor"
+              class="form-control"
+              [class.is-invalid]="r.invalid && (r.touched || f.submitted)"
+              [(ngModel)]="receptor"
+              #r="ngModel"
+              required
+              minlength="3"
+              maxlength="80"
+            />
+            <div class="invalid-feedback">Ingrese el nombre de quien recibe el equipo (mínimo 3 caracteres).</div>
+          }
         </div>
         <div class="col-12">
-          <label for="obs" class="form-label">Observaciones</label>
-          <textarea id="obs" name="obs" rows="2" class="form-control" [(ngModel)]="observaciones"></textarea>
+          <label for="obs" class="form-label">
+            Observaciones de la entrega
+            @if (sinDevolver().length > 0) {
+              <span class="text-danger">(obligatorio: hay {{ sinDevolver().length }} accesorio(s) sin devolver)</span>
+            }
+          </label>
+          <textarea
+            id="obs"
+            name="obs"
+            rows="5"
+            maxlength="300"
+            class="form-control"
+            [class.is-invalid]="o.invalid && (o.touched || f.submitted)"
+            [(ngModel)]="observaciones"
+            #o="ngModel"
+            [required]="sinDevolver().length > 0"
+            placeholder="Estado en que se entrega el equipo, accesorios que no se devuelven y el motivo, acuerdos con el cliente..."
+          ></textarea>
+          <div class="d-flex justify-content-between">
+            <div class="invalid-feedback d-block" [hidden]="!(o.invalid && (o.touched || f.submitted))">
+              Explique por qué quedan accesorios sin devolver.
+            </div>
+            <small class="text-muted ms-auto">{{ observaciones.length }}/300</small>
+          </div>
         </div>
       </div>
     </div>
@@ -72,7 +135,7 @@
   @if (confirmando()) {
     <app-confirmar-dialogo
       titulo="Confirmar entrega"
-      [mensaje]="'Se registrará la entrega de la orden ' + orden()!.codigo + ' a ' + receptor + '. Esta acción no se puede deshacer.'"
+      [mensaje]="'Se registrará la entrega de la orden ' + orden()!.codigo + ' a ' + (titular ? nombreCliente() : receptor) + '. Esta acción no se puede deshacer.'"
       textoConfirmar="Confirmar entrega"
       (confirmado)="confirmar()"
       (cancelado)="confirmando.set(false)"

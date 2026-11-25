@@ -21,9 +21,11 @@ export class Entrega {
   private id = Number(this.route.snapshot.paramMap.get('id'));
   readonly orden = computed(() => this.datos.obtenerOrden(this.id));
 
+  titular = true;
   receptor = '';
-  accesoriosDevueltos = this.orden()?.accesorios ?? '';
   observaciones = '';
+
+  readonly devueltos = signal<number[]>([]);
 
   readonly confirmando = signal(false);
   readonly entregado = signal(false);
@@ -31,14 +33,34 @@ export class Entrega {
 
   readonly deOtraSede = computed(() => this.orden()?.sedeId !== this.auth.usuario()?.sedeId);
 
-  readonly puedeEntregarse = computed(() => {
+  readonly nombreCliente = computed(() => {
     const orden = this.orden();
-    const estado = orden?.estado;
+    return orden?.clienteNombre ?? this.datos.cliente(orden?.clienteId ?? 0)?.nombres ?? '';
+  });
+
+  readonly sinDevolver = computed(() => (this.orden()?.accesorios ?? []).filter((a) => !this.devueltos().includes(a.id)));
+
+  readonly puedeEntregarse = computed(() => {
+    const estado = this.orden()?.estado;
     if (this.deOtraSede()) {
       return false;
     }
     return estado === 'LISTO_PARA_ENTREGA' || estado === 'DEVUELTO_SIN_REPARAR';
   });
+
+  estaDevuelto(accesorioId: number): boolean {
+    return this.devueltos().includes(accesorioId);
+  }
+
+  alternarDevuelto(accesorioId: number, marcado: boolean): void {
+    this.devueltos.update((lista) =>
+      marcado ? [...lista.filter((id) => id !== accesorioId), accesorioId] : lista.filter((id) => id !== accesorioId),
+    );
+  }
+
+  marcarTodos(): void {
+    this.devueltos.set((this.orden()?.accesorios ?? []).map((a) => a.id));
+  }
 
   pedirConfirmacion(formulario: NgForm): void {
     if (formulario.invalid) {
@@ -50,7 +72,8 @@ export class Entrega {
   confirmar(): void {
     this.confirmando.set(false);
     this.error.set('');
-    this.datos.confirmarEntrega(this.id, this.receptor, this.accesoriosDevueltos, this.observaciones).subscribe({
+    const receptor = this.titular ? '' : this.receptor.trim();
+    this.datos.confirmarEntrega(this.id, receptor, this.titular, this.devueltos(), this.observaciones.trim()).subscribe({
       next: () => this.entregado.set(true),
       error: (e) => this.error.set(mensajeDeError(e)),
     });

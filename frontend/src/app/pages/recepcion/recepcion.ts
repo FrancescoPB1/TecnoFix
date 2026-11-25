@@ -28,7 +28,9 @@ export class Recepcion {
   };
   readonly hoy = new Date().toISOString().slice(0, 10);
   falla = '';
-  accesorios = '';
+  accesorios: string[] = [];
+  accesorioNuevo = '';
+  readonly maxAccesorios = 10;
 
   readonly clienteEncontrado = signal<Cliente | null>(null);
   readonly busquedaHecha = signal(false);
@@ -66,6 +68,19 @@ export class Recepcion {
     };
   }
 
+  agregarAccesorio(): void {
+    const nombre = this.accesorioNuevo.trim();
+    if (!nombre || this.accesorios.length >= this.maxAccesorios) {
+      return;
+    }
+    this.accesorios = [...this.accesorios, nombre];
+    this.accesorioNuevo = '';
+  }
+
+  quitarAccesorio(posicion: number): void {
+    this.accesorios = this.accesorios.filter((_, i) => i !== posicion);
+  }
+
   alCambiarDni(): void {
     this.busquedaHecha.set(false);
     this.clienteEncontrado.set(null);
@@ -80,6 +95,8 @@ export class Recepcion {
     if (formulario.invalid) {
       return;
     }
+
+    this.agregarAccesorio();
 
     const datosCliente = this.clienteEncontrado() ? {} : this.nuevoCliente;
 
@@ -112,7 +129,8 @@ export class Recepcion {
     this.nuevoCliente = { nombres: '', correo: '', telefono: '' };
     this.equipo = { tipoId: null, modelo: '', serie: '', fechaCompra: '' };
     this.falla = '';
-    this.accesorios = '';
+    this.accesorios = [];
+    this.accesorioNuevo = '';
     this.clienteEncontrado.set(null);
     this.busquedaHecha.set(false);
     this.error.set('');

@@ -16,7 +16,13 @@
         }
       </p>
       <p class="mb-1"><strong>Falla reportada:</strong> {{ orden()!.falla }}</p>
-      <p class="mb-3"><strong>Accesorios entregados:</strong> {{ orden()!.accesorios || 'Ninguno' }}</p>
+      <p class="mb-3"><strong>Accesorios entregados:</strong>
+        @for (a of orden()!.accesorios; track a.id) {
+          <span class="badge text-bg-light border me-1">{{ a.nombre }}@if (a.devuelto) { (devuelto) }</span>
+        } @empty {
+          Ninguno
+        }
+      </p>
 
       <ol class="list-unstyled d-flex flex-wrap gap-2 mb-0" aria-label="Avance de la orden">
         @for (paso of pasos(); track paso; let i = $index) {

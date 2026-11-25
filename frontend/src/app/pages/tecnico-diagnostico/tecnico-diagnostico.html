@@ -25,7 +25,13 @@
         }
       </p>
       <p class="mb-1"><strong>Falla reportada:</strong> {{ orden()!.falla }}</p>
-      <p class="mb-0"><strong>Accesorios recibidos:</strong> {{ orden()!.accesorios || 'Ninguno' }}</p>
+      <p class="mb-0"><strong>Accesorios recibidos:</strong>
+      @for (a of orden()!.accesorios; track a.id) {
+          <span class="badge text-bg-light border me-1">{{ a.nombre }}</span>
+        } @empty {
+          Ninguno
+        }
+      </p>
     </div>
   </div>
 

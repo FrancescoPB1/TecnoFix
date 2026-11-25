@@ -193,15 +193,44 @@
             <div class="invalid-feedback">Describa la falla (mínimo 10 caracteres).</div>
           </div>
           <div class="col-12 col-md-6">
-            <label for="accesorios" class="form-label">Accesorios recibidos</label>
-            <textarea
-              id="accesorios"
-              name="accesorios"
-              rows="3"
-              class="form-control"
-              placeholder="Ej.: cargador, mochila, cable USB"
-              [(ngModel)]="accesorios"
-            ></textarea>
+                        <label for="accesorio-nuevo" class="form-label">Accesorios recibidos</label>
+            <div class="input-group">
+              <input
+                id="accesorio-nuevo"
+                name="accesorioNuevo"
+                class="form-control"
+                maxlength="60"
+                placeholder="Ej.: cargador, mochila, cable USB"
+                [(ngModel)]="accesorioNuevo"
+                [disabled]="accesorios.length >= maxAccesorios"
+                (keydown.enter)="$event.preventDefault(); agregarAccesorio()"
+              />
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                [disabled]="!accesorioNuevo.trim() || accesorios.length >= maxAccesorios"
+                (click)="agregarAccesorio()"
+              >
+                Agregar
+              </button>
+            </div>
+            <div class="form-text">
+              Escriba un accesorio y presione Agregar (o Enter). Se registran por separado: {{ accesorios.length }}/{{ maxAccesorios }}.
+            </div>
+            @if (accesorios.length === 0) {
+              <p class="text-muted small mt-2 mb-0">Todavía no se agregó ningún accesorio.</p>
+            } @else {
+              <ul class="list-group mt-2">
+                @for (a of accesorios; track $index) {
+                  <li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                    <span>{{ a }}</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" [attr.aria-label]="'Quitar ' + a" (click)="quitarAccesorio($index)">
+                      Quitar
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
           </div>
         </div>
       </div>
