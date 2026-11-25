@@ -10,6 +10,7 @@
   <div class="card mb-3">
     <div class="card-body">
       <p class="mb-1"><strong>Sede de atención:</strong> {{ datos.nombreSede(orden()!.sedeId) }}</p>
+      <p class="mb-1"><strong>Técnico a cargo:</strong> {{ orden()!.tecnicoNombre || 'Aún sin asignar' }}</p>
       <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}
         @if (orden()!.enGarantia) {
           <span class="badge text-bg-info ms-1">Garantía</span>
@@ -18,7 +19,12 @@
       <p class="mb-1"><strong>Falla reportada:</strong> {{ orden()!.falla }}</p>
       <p class="mb-3"><strong>Accesorios entregados:</strong>
         @for (a of orden()!.accesorios; track a.id) {
-          <span class="badge text-bg-light border me-1">{{ a.nombre }}@if (a.devuelto) { (devuelto) }</span>
+          <span class="badge text-bg-light border me-1">
+            {{ a.nombre }}
+            @if (orden()!.estado === 'ENTREGADO') {
+              — {{ a.devuelto ? 'devuelto' : 'sin devolver' }}
+            }
+          </span>
         } @empty {
           Ninguno
         }
@@ -38,7 +44,7 @@
 
   <app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
   <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
-  
+
   @if (orden()!.estado === 'PRESUPUESTO_ENVIADO') {
     <app-decision-presupuesto [orden]="orden()!" (decidir)="pendiente.set($event)" />
   } @else if (orden()!.diagnostico) {
@@ -54,6 +60,25 @@
             }
           </p>
         }
+      </div>
+    </div>
+  }
+
+  @if (orden()!.avances.length > 0) {
+    <div class="card mb-3">
+      <div class="card-header">Avances de la reparación</div>
+      <div class="card-body p-0">
+        <app-lista-avances [avances]="orden()!.avances" />
+      </div>
+    </div>
+  }
+
+  @if (orden()!.estado === 'ENTREGADO') {
+    <div class="card mb-3">
+      <div class="card-header">Entrega del equipo</div>
+      <div class="card-body">
+        <p class="mb-1"><strong>Recibió:</strong> {{ orden()!.receptor }}</p>
+        <p class="mb-0"><strong>Observaciones:</strong> {{ orden()!.observacionesEntrega || 'Sin observaciones' }}</p>
       </div>
     </div>
   }

@@ -7,6 +7,7 @@ import { EstadoOrden } from '../../models/modelos';
 import { EstadoBadge } from '../../shared/estado-badge/estado-badge';
 import { MensajeFeedback } from '../../shared/mensaje-feedback/mensaje-feedback';
 import { ConfirmarDialogo } from '../../shared/confirmar-dialogo/confirmar-dialogo';
+import { ListaAvances } from '../../shared/lista-avances/lista-avances';
 import { DecisionPresupuesto } from '../decision-presupuesto/decision-presupuesto';
 import { mensajeDeError } from '../../utils/errores';
 
@@ -24,7 +25,7 @@ const PASO_ACTUAL: Record<EstadoOrden, number> = {
 
 @Component({
   selector: 'app-cliente-seguimiento',
-  imports: [DatePipe, RouterLink, EstadoBadge, MensajeFeedback, ConfirmarDialogo, DecisionPresupuesto],
+  imports: [DatePipe, RouterLink, EstadoBadge, MensajeFeedback, ConfirmarDialogo, DecisionPresupuesto, ListaAvances],
   templateUrl: './cliente-seguimiento.html',
 })
 export class ClienteSeguimiento {
