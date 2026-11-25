@@ -34,6 +34,7 @@
 
 <app-mensaje-feedback [texto]="mensaje()" tipo="success" (cerrar)="mensaje.set('')" />
 <app-mensaje-feedback [texto]="error()" tipo="danger" (cerrar)="error.set('')" />
+
 @if (!esRecepcion) {
   <div class="card mb-3">
     <div class="card-header">Resumen por sede</div>
@@ -121,6 +122,7 @@
             <th>Equipo</th>
             <th>Estado</th>
             <th>Técnico</th>
+            <th>Detalle</th>
             <th>Acción</th>
           </tr>
         </thead>
@@ -140,6 +142,9 @@
               </td>
               <td><app-estado-badge [estado]="o.estado" /></td>
               <td>{{ o.tecnicoNombre || 'Sin asignar' }}</td>
+              <td>
+                <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/admin/orden', o.id]">Ver detalle</a>
+              </td>
               <td>
                 @if (o.estado === 'RECIBIDO') {
                   <div class="input-group input-group-sm">
@@ -166,7 +171,7 @@
             </tr>
           } @empty {
             <tr>
-              <td [attr.colspan]="esRecepcion ? 6 : 7" class="text-center text-muted py-4">No hay órdenes que coincidan con la búsqueda.</td>
+              <td [attr.colspan]="esRecepcion ? 7 : 8" class="text-center text-muted py-4">No hay órdenes que coincidan con la búsqueda.</td>
             </tr>
           }
         </tbody>

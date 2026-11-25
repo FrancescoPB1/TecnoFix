@@ -5,6 +5,7 @@ import { Login } from './pages/login/login';
 import { PanelAdmin } from './pages/panel-admin/panel-admin';
 import { Recepcion } from './pages/recepcion/recepcion';
 import { Entrega } from './pages/entrega/entrega';
+import { DetalleOrden } from './pages/detalle-orden/detalle-orden';
 import { Usuarios } from './pages/usuarios/usuarios';
 import { Clientes } from './pages/clientes/clientes';
 import { TiposEquipo } from './pages/tipos-equipo/tipos-equipo';
@@ -23,22 +24,17 @@ export const routes: Routes = [
     component: Layout,
     canActivate: [autenticado],
     children: [
-      // Personal de la red: el panel lo ven administrador y recepción
       { path: 'admin', component: PanelAdmin, canActivate: [conRol], data: { roles: ['ADMIN', 'RECEPCION'] } },
-      // Solo recepción atiende el mostrador
+      { path: 'admin/orden/:id', component: DetalleOrden, canActivate: [conRol], data: { roles: ['ADMIN', 'RECEPCION'] } },
       { path: 'admin/recepcion', component: Recepcion, canActivate: [conRol], data: { roles: ['RECEPCION'] } },
       { path: 'admin/entrega/:id', component: Entrega, canActivate: [conRol], data: { roles: ['RECEPCION'] } },
-      // Clientes: recepción los registra y modifica; el administrador los consulta
       { path: 'admin/clientes', component: Clientes, canActivate: [conRol], data: { roles: ['ADMIN', 'RECEPCION'] } },
-      // Solo el administrador gestiona usuarios, sedes y el catálogo de tipos de equipo
       { path: 'admin/usuarios', component: Usuarios, canActivate: [conRol], data: { roles: ['ADMIN'] } },
       { path: 'admin/sedes', component: Sedes, canActivate: [conRol], data: { roles: ['ADMIN'] } },
       { path: 'admin/tipos', component: TiposEquipo, canActivate: [conRol], data: { roles: ['ADMIN'] } },
-      // Técnico
       { path: 'tecnico', component: TecnicoOrdenes, canActivate: [conRol], data: { roles: ['TECNICO'] } },
       { path: 'tecnico/diagnostico/:id', component: TecnicoDiagnostico, canActivate: [conRol], data: { roles: ['TECNICO'] } },
       { path: 'tecnico/reparacion/:id', component: TecnicoReparacion, canActivate: [conRol], data: { roles: ['TECNICO'] } },
-      // Cliente
       { path: 'cliente', component: ClienteOrdenes, canActivate: [conRol], data: { roles: ['CLIENTE'] } },
       { path: 'cliente/orden/:id', component: ClienteSeguimiento, canActivate: [conRol], data: { roles: ['CLIENTE'] } },
     ],

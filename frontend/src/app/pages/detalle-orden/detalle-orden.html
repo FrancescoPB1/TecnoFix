@@ -1,0 +1,104 @@
+@if (!orden()) {
+  <div class="alert alert-warning">No se encontró la orden solicitada.</div>
+  <a routerLink="/admin" class="btn btn-outline-secondary">Volver al panel</a>
+} @else {
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h4 mb-0">Detalle de la orden {{ orden()!.codigo }}</h1>
+    <app-estado-badge [estado]="orden()!.estado" />
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Recepción</div>
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-12 col-md-6">
+          <p class="mb-1"><strong>Cliente:</strong> {{ orden()!.clienteNombre }}</p>
+          @if (cliente(); as c) {
+            <p class="mb-1"><strong>DNI:</strong> {{ c.dni }} · <strong>Teléfono:</strong> {{ c.telefono }}</p>
+          }
+          <p class="mb-1"><strong>Sede:</strong> {{ orden()!.sedeNombre }}</p>
+          <p class="mb-1"><strong>Técnico:</strong> {{ orden()!.tecnicoNombre || 'Sin asignar' }}</p>
+        </div>
+        <div class="col-12 col-md-6">
+          <p class="mb-1"><strong>Equipo:</strong> {{ datos.descripcionEquipo(orden()!.equipoId) }}
+            @if (orden()!.enGarantia) {
+              <span class="badge text-bg-info ms-1">Garantía</span>
+            }
+          </p>
+          @if (orden()!.equipo; as e) {
+            <p class="mb-1"><strong>Serie / IMEI:</strong> {{ e.serie }}</p>
+            <p class="mb-1"><strong>Fecha de compra:</strong> {{ e.fechaCompra | date: 'dd/MM/yyyy' }}</p>
+          }
+        </div>
+        <div class="col-12">
+          <p class="mb-1"><strong>Falla reportada:</strong> {{ orden()!.falla }}</p>
+          <p class="mb-0"><strong>Accesorios recibidos:</strong>
+            @for (a of orden()!.accesorios; track a.id) {
+              <span class="badge text-bg-light border me-1">
+                {{ a.nombre }}
+                @if (cerrada()) {
+                  — {{ a.devuelto ? 'devuelto' : 'sin devolver' }}
+                }
+              </span>
+            } @empty {
+              Ninguno
+            }
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (orden()!.diagnostico) {
+    <div class="card mb-3">
+      <div class="card-header">Diagnóstico y presupuesto</div>
+      <div class="card-body">
+        <p class="mb-1"><strong>Diagnóstico:</strong> {{ orden()!.diagnostico }}</p>
+        @if (orden()!.enGarantia) {
+          <p class="mb-0"><strong>Costo:</strong> S/ 0.00 (cubierto por garantía)</p>
+        } @else {
+          <p class="mb-0"><strong>Presupuesto:</strong> S/ {{ orden()!.montoPresupuesto?.toFixed(2) }}
+            @if (orden()!.decision) {
+              — {{ orden()!.decision === 'APROBADO' ? 'aprobado por el cliente' : 'rechazado por el cliente' }}
+            } @else {
+              — pendiente de decisión del cliente
+            }
+          </p>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="card mb-3">
+    <div class="card-header">Avances de la reparación ({{ orden()!.avances.length }})</div>
+    <div class="card-body p-0">
+      <app-lista-avances [avances]="orden()!.avances" />
+    </div>
+  </div>
+
+  @if (cerrada()) {
+    <div class="card mb-3">
+      <div class="card-header">Entrega</div>
+      <div class="card-body">
+        <p class="mb-1"><strong>Recibió:</strong> {{ orden()!.receptor }}</p>
+        <p class="mb-0"><strong>Observaciones:</strong> {{ orden()!.observacionesEntrega || 'Sin observaciones' }}</p>
+      </div>
+    </div>
+  }
+
+  <div class="card mb-3">
+    <div class="card-header">Historial de la orden</div>
+    <ul class="list-group list-group-flush">
+      @for (m of orden()!.historial; track m.fecha) {
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between flex-wrap">
+            <span>{{ m.detalle }}</span>
+            <small class="text-muted">{{ m.fecha | date: 'dd/MM/yyyy HH:mm' }} · {{ m.responsable }}</small>
+          </div>
+        </li>
+      }
+    </ul>
+  </div>
+
+  <a routerLink="/admin" class="btn btn-outline-secondary">Volver al panel</a>
+}
