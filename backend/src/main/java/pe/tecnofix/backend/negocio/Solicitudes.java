@@ -9,6 +9,7 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import pe.tecnofix.backend.modelo.Rol;
 
 
@@ -105,7 +106,7 @@ public final class Solicitudes {
             @PastOrPresent(message = "La fecha de compra no puede ser futura.") LocalDate fechaCompra,
             @NotBlank(message = "Describa la falla.")
             @Size(min = 10, max = 500, message = "La falla debe tener entre 10 y 500 caracteres.") String falla,
-            @Size(max = 200, message = "Los accesorios admiten hasta 200 caracteres.") String accesorios) {
+            @Size(max = 10, message = "Puede registrar hasta 10 accesorios.") List<String> accesorios) {
     }
 
     public record Asignacion(
@@ -130,10 +131,11 @@ public final class Solicitudes {
             boolean terminada) {
     }
 
+   
     public record Entrega(
-            @NotBlank(message = "Ingrese quién recibe el equipo.")
-            @Size(min = 3, max = 80, message = "El receptor debe tener entre 3 y 80 caracteres.") String receptor,
-            @Size(max = 200, message = "Los accesorios admiten hasta 200 caracteres.") String accesoriosDevueltos,
+            @Size(max = 80, message = "El receptor admite hasta 80 caracteres.") String receptor,
+            boolean titular,
+            List<Long> devueltos,
             @Size(max = 300, message = "Las observaciones admiten hasta 300 caracteres.") String observaciones) {
     }
 }

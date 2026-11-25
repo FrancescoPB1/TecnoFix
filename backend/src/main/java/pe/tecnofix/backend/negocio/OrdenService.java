@@ -2,6 +2,7 @@ package pe.tecnofix.backend.negocio;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -11,6 +12,7 @@ import pe.tecnofix.backend.datos.ClienteRepository;
 import pe.tecnofix.backend.datos.EquipoRepository;
 import pe.tecnofix.backend.datos.OrdenRepository;
 import pe.tecnofix.backend.datos.UsuarioRepository;
+import pe.tecnofix.backend.modelo.AccesorioOrden;
 import pe.tecnofix.backend.modelo.Cliente;
 import pe.tecnofix.backend.modelo.Decision;
 import pe.tecnofix.backend.modelo.Equipo;
@@ -21,6 +23,7 @@ import pe.tecnofix.backend.modelo.Sede;
 import pe.tecnofix.backend.modelo.TipoEquipo;
 import pe.tecnofix.backend.modelo.Usuario;
 import pe.tecnofix.backend.seguridad.UsuarioSesion;
+
 
 @Service
 @Transactional
@@ -106,7 +109,7 @@ public class OrdenService {
         }
 
         boolean enGarantia = garantiaVigente(equipo.getFechaCompra(), LocalDate.now());
-        String accesorios = datos.accesorios() == null ? "" : datos.accesorios().trim();
+        List<String> accesorios = limpiarAccesorios(datos.accesorios());
 
         Orden orden = new Orden();
         orden.setCodigo(UUID.randomUUID().toString().substring(0, 10));
@@ -115,10 +118,12 @@ public class OrdenService {
         orden.setSede(sede);
         orden.setEnGarantia(enGarantia);
         orden.setFalla(datos.falla().trim());
-        orden.setAccesorios(accesorios);
+        for (String nombre : accesorios) {
+            orden.agregarAccesorio(nombre);
+        }
         orden.setEstado(EstadoOrden.RECIBIDO);
         orden.agregarMovimiento(EstadoOrden.RECIBIDO, sesion.nombre(),
-                "Equipo recibido. Accesorios: " + (accesorios.isEmpty() ? "ninguno" : accesorios) + ". "
+                "Equipo recibido. Accesorios: " + (accesorios.isEmpty() ? "ninguno" : String.join(", ", accesorios)) + ". "
                         + (enGarantia ? "Está en garantía." : "Garantía vencida."));
         orden = ordenes.save(orden);
 
@@ -192,12 +197,12 @@ public class OrdenService {
         exigirTecnicoAsignado(orden, sesion);
         exigirEstado(orden, "registrar la reparacion", EstadoOrden.EN_REPARACION);
 
-        if (datos.terminada() && vacio(datos.pruebas())) {
+        String repuestos = datos.repuestos() == null ? "" : datos.repuestos().trim();
+        String pruebas = datos.pruebas() == null ? "" : datos.pruebas().trim();
+        if (datos.terminada() && pruebas.isEmpty()) {
             throw new ReglaNegocioException("Para dejar la orden lista debe registrar las pruebas realizadas.");
         }
-        orden.setActividad(datos.actividad().trim());
-        orden.setRepuestos(datos.repuestos() == null ? "" : datos.repuestos().trim());
-        orden.setPruebas(datos.pruebas() == null ? "" : datos.pruebas().trim());
+        orden.agregarAvance(sesion.nombre(), datos.actividad().trim(), repuestos, pruebas);
         if (datos.terminada()) {
             orden.setEstado(EstadoOrden.LISTO_PARA_ENTREGA);
             orden.agregarMovimiento(EstadoOrden.LISTO_PARA_ENTREGA, sesion.nombre(), "Reparación y pruebas completadas.");
@@ -210,11 +215,51 @@ public class OrdenService {
         verificarAcceso(orden, sesion);
         exigirEstado(orden, "registrar la entrega", EstadoOrden.LISTO_PARA_ENTREGA, EstadoOrden.DEVUELTO_SIN_REPARAR);
 
-        orden.setReceptor(datos.receptor().trim());
-        orden.setAccesoriosDevueltos(datos.accesoriosDevueltos() == null ? "" : datos.accesoriosDevueltos().trim());
-        orden.setObservacionesEntrega(datos.observaciones() == null ? "" : datos.observaciones().trim());
+        String receptor;
+        if (datos.titular()) {
+            receptor = orden.getClienteNombre();
+        } else {
+            receptor = datos.receptor() == null ? "" : datos.receptor().trim();
+            if (receptor.length() < 3) {
+                throw new ReglaNegocioException("Ingrese quién recibe el equipo (mínimo 3 caracteres).");
+            }
+        }
+
+        List<Long> devueltos = datos.devueltos() == null ? List.of() : datos.devueltos();
+        for (Long idAccesorio : devueltos) {
+            boolean pertenece = orden.getAccesorios().stream().anyMatch(a -> idAccesorio.equals(a.getId()));
+            if (!pertenece) {
+                throw new ReglaNegocioException("El accesorio " + idAccesorio + " no pertenece a la orden.");
+            }
+        }
+        String observaciones = datos.observaciones() == null ? "" : datos.observaciones().trim();
+        List<String> entregados = new ArrayList<>();
+        List<String> sinDevolver = new ArrayList<>();
+        for (AccesorioOrden accesorio : orden.getAccesorios()) {
+            if (devueltos.contains(accesorio.getId())) {
+                entregados.add(accesorio.getNombre());
+            } else {
+                sinDevolver.add(accesorio.getNombre());
+            }
+        }
+        if (!sinDevolver.isEmpty() && observaciones.isEmpty()) {
+            throw new ReglaNegocioException("Hay accesorios sin devolver: explique el motivo en las observaciones.");
+        }
+        for (AccesorioOrden accesorio : orden.getAccesorios()) {
+            accesorio.setDevuelto(devueltos.contains(accesorio.getId()));
+        }
+
+        orden.setReceptor(receptor);
+        orden.setObservacionesEntrega(observaciones);
         orden.setEstado(EstadoOrden.ENTREGADO);
-        orden.agregarMovimiento(EstadoOrden.ENTREGADO, sesion.nombre(), "Entregado a " + orden.getReceptor() + ".");
+        String detalle = "Entregado a " + receptor + (datos.titular() ? " (titular)" : "") + ".";
+        if (!entregados.isEmpty()) {
+            detalle += " Accesorios devueltos: " + String.join(", ", entregados) + ".";
+        }
+        if (!sinDevolver.isEmpty()) {
+            detalle += " Sin devolver: " + String.join(", ", sinDevolver) + ".";
+        }
+        orden.agregarMovimiento(EstadoOrden.ENTREGADO, sesion.nombre(), detalle);
         return ordenes.save(orden);
     }
 
@@ -256,6 +301,24 @@ public class OrdenService {
             }
         }
         throw new ReglaNegocioException("No se puede " + accion + ": la orden está en estado " + orden.getEstado() + ".");
+    }
+
+    private List<String> limpiarAccesorios(List<String> lista) {
+        List<String> resultado = new ArrayList<>();
+        if (lista == null) {
+            return resultado;
+        }
+        for (String nombre : lista) {
+            if (vacio(nombre)) {
+                continue;
+            }
+            String limpio = nombre.trim();
+            if (limpio.length() > 60) {
+                throw new ReglaNegocioException("Cada accesorio admite hasta 60 caracteres.");
+            }
+            resultado.add(limpio);
+        }
+        return resultado;
     }
 
     private boolean vacio(String texto) {

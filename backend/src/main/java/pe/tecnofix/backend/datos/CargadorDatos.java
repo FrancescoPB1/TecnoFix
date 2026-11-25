@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
+import pe.tecnofix.backend.modelo.AvanceReparacion;
 import pe.tecnofix.backend.modelo.Cliente;
 import pe.tecnofix.backend.modelo.Decision;
 import pe.tecnofix.backend.modelo.Equipo;
@@ -16,6 +17,7 @@ import pe.tecnofix.backend.modelo.Rol;
 import pe.tecnofix.backend.modelo.Sede;
 import pe.tecnofix.backend.modelo.TipoEquipo;
 import pe.tecnofix.backend.modelo.Usuario;
+
 
 @Component
 public class CargadorDatos implements CommandLineRunner {
@@ -92,7 +94,7 @@ public class CargadorDatos implements CommandLineRunner {
         ordenes.save(o2);
 
         Orden o3 = orden("ST-0003", luis, galaxyBook, limaCentro, carla, false,
-                "El sistema tarda mucho en iniciar y se congela.", "Cargador y mochila",
+                "El sistema tarda mucho en iniciar y se congela.", "Cargador, mochila",
                 EstadoOrden.PRESUPUESTO_ENVIADO);
         o3.setDiagnostico("Unidad de almacenamiento con sectores dañados. Se recomienda cambiarla por una SSD y reinstalar el sistema.");
         o3.setMontoPresupuesto(new BigDecimal("280.00"));
@@ -107,21 +109,21 @@ public class CargadorDatos implements CommandLineRunner {
         o4.setDiagnostico("Bomba de desagüe obstruida y con desgaste. Se reemplaza la bomba (cubierto por garantía).");
         o4.setMontoPresupuesto(BigDecimal.ZERO);
         o4.setDecision(Decision.APROBADO);
-        o4.setActividad("Cambio de la bomba de desagüe.");
+        avance(o4, "2026-10-24T09:00:00", "Rolando Díaz", "Se desmontó la bomba de desagüe y se retiró la obstrucción.", "Ninguno", "");
+        avance(o4, "2026-10-24T14:30:00", "Rolando Díaz", "Cambio de la bomba de desagüe.", "Bomba de desagüe", "");
         movimiento(o4, "2026-10-22T09:30:00", EstadoOrden.RECIBIDO, "Patricia Lozano", "Equipo recibido con manguera de desagüe. Está en garantía.");
         movimiento(o4, "2026-10-22T10:00:00", EstadoOrden.EN_DIAGNOSTICO, "Patricia Lozano", "Asignada a Rolando Díaz.");
         movimiento(o4, "2026-10-23T15:20:00", EstadoOrden.EN_REPARACION, "Rolando Díaz", "Diagnóstico registrado. Cubierto por garantía: pasa directo a reparación.");
         ordenes.save(o4);
 
         Orden o5 = orden("ST-0005", ana, galaxyTab, limaNorte, monica, false,
-                "La pantalla no responde al tacto.", "Cargador y funda",
+                "La pantalla no responde al tacto.", "Cargador, funda",
                 EstadoOrden.LISTO_PARA_ENTREGA);
         o5.setDiagnostico("Conector del panel táctil suelto. Se reconectó y se calibró.");
         o5.setMontoPresupuesto(new BigDecimal("60.00"));
         o5.setDecision(Decision.APROBADO);
-        o5.setActividad("Reconexión y calibración del panel táctil.");
-        o5.setRepuestos("Ninguno");
-        o5.setPruebas("Táctil y pantalla sin fallas durante 30 minutos.");
+        avance(o5, "2026-10-22T10:00:00", "Mónica Ruiz", "Reconexión del cable del panel táctil.", "Ninguno", "");
+        avance(o5, "2026-10-22T16:45:00", "Mónica Ruiz", "Calibración del panel táctil.", "Ninguno", "Táctil y pantalla sin fallas durante 30 minutos.");
         movimiento(o5, "2026-10-20T11:00:00", EstadoOrden.RECIBIDO, "Diego Alarcón", "Equipo recibido con cargador y funda. Garantía vencida.");
         movimiento(o5, "2026-10-20T11:20:00", EstadoOrden.EN_DIAGNOSTICO, "Diego Alarcón", "Asignada a Mónica Ruiz.");
         movimiento(o5, "2026-10-21T10:10:00", EstadoOrden.PRESUPUESTO_ENVIADO, "Mónica Ruiz", "Presupuesto de S/ 60.00 enviado al cliente.");
@@ -201,9 +203,24 @@ public class CargadorDatos implements CommandLineRunner {
         orden.setTecnico(tecnico);
         orden.setEnGarantia(enGarantia);
         orden.setFalla(falla);
-        orden.setAccesorios(accesorios);
+        for (String nombre : accesorios.split(",")) {
+            if (!nombre.isBlank()) {
+                orden.agregarAccesorio(nombre.trim());
+            }
+        }
         orden.setEstado(estado);
         return orden;
+    }
+
+    private void avance(Orden orden, String fecha, String tecnico, String actividad, String repuestos, String pruebas) {
+        AvanceReparacion avance = new AvanceReparacion();
+        avance.setOrden(orden);
+        avance.setFecha(LocalDateTime.parse(fecha));
+        avance.setTecnico(tecnico);
+        avance.setActividad(actividad);
+        avance.setRepuestos(repuestos);
+        avance.setPruebas(pruebas);
+        orden.getAvances().add(avance);
     }
 
     private void movimiento(Orden orden, String fecha, EstadoOrden estado, String responsable, String detalle) {

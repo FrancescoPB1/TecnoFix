@@ -48,9 +48,6 @@ public class Orden {
     @Column(nullable = false, length = 500)
     private String falla;
 
-    @Column(length = 200)
-    private String accesorios;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private EstadoOrden estado;
@@ -65,23 +62,19 @@ public class Orden {
     @Column(length = 20)
     private Decision decision;
 
-    @Column(length = 500)
-    private String actividad;
-
-    @Column(length = 300)
-    private String repuestos;
-
-    @Column(length = 500)
-    private String pruebas;
-
     @Column(length = 80)
     private String receptor;
 
-    @Column(length = 200)
-    private String accesoriosDevueltos;
-
     @Column(length = 300)
     private String observacionesEntrega;
+
+    @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL)
+    @OrderBy("id ASC")
+    private List<AccesorioOrden> accesorios = new ArrayList<>();
+
+    @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL)
+    @OrderBy("id ASC")
+    private List<AvanceReparacion> avances = new ArrayList<>();
 
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL)
     @OrderBy("id ASC")
@@ -157,14 +150,6 @@ public class Orden {
         this.falla = falla;
     }
 
-    public String getAccesorios() {
-        return accesorios;
-    }
-
-    public void setAccesorios(String accesorios) {
-        this.accesorios = accesorios;
-    }
-
     public EstadoOrden getEstado() {
         return estado;
     }
@@ -197,44 +182,12 @@ public class Orden {
         this.decision = decision;
     }
 
-    public String getActividad() {
-        return actividad;
-    }
-
-    public void setActividad(String actividad) {
-        this.actividad = actividad;
-    }
-
-    public String getRepuestos() {
-        return repuestos;
-    }
-
-    public void setRepuestos(String repuestos) {
-        this.repuestos = repuestos;
-    }
-
-    public String getPruebas() {
-        return pruebas;
-    }
-
-    public void setPruebas(String pruebas) {
-        this.pruebas = pruebas;
-    }
-
     public String getReceptor() {
         return receptor;
     }
 
     public void setReceptor(String receptor) {
         this.receptor = receptor;
-    }
-
-    public String getAccesoriosDevueltos() {
-        return accesoriosDevueltos;
-    }
-
-    public void setAccesoriosDevueltos(String accesoriosDevueltos) {
-        this.accesoriosDevueltos = accesoriosDevueltos;
     }
 
     public String getObservacionesEntrega() {
@@ -245,12 +198,47 @@ public class Orden {
         this.observacionesEntrega = observacionesEntrega;
     }
 
+    public List<AccesorioOrden> getAccesorios() {
+        return accesorios;
+    }
+
+    public void setAccesorios(List<AccesorioOrden> accesorios) {
+        this.accesorios = accesorios;
+    }
+
+    public List<AvanceReparacion> getAvances() {
+        return avances;
+    }
+
+    public void setAvances(List<AvanceReparacion> avances) {
+        this.avances = avances;
+    }
+
     public List<MovimientoOrden> getHistorial() {
         return historial;
     }
 
     public void setHistorial(List<MovimientoOrden> historial) {
         this.historial = historial;
+    }
+
+    public void agregarAccesorio(String nombre) {
+        AccesorioOrden accesorio = new AccesorioOrden();
+        accesorio.setOrden(this);
+        accesorio.setNombre(nombre);
+        accesorio.setDevuelto(false);
+        accesorios.add(accesorio);
+    }
+
+    public void agregarAvance(String tecnico, String actividad, String repuestos, String pruebas) {
+        AvanceReparacion avance = new AvanceReparacion();
+        avance.setOrden(this);
+        avance.setFecha(LocalDateTime.now());
+        avance.setTecnico(tecnico);
+        avance.setActividad(actividad);
+        avance.setRepuestos(repuestos);
+        avance.setPruebas(pruebas);
+        avances.add(avance);
     }
 
     public void agregarMovimiento(EstadoOrden estado, String responsable, String detalle) {
